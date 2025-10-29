@@ -11,28 +11,30 @@
     legend { font-weight: 600; font-size: 1rem; }
     label { display: block; margin: 6px 0 3px; font-size: 0.95rem; }
     input, textarea, select {
-      width: 100%;
-      padding: 8px;
-      font-size: 1rem;
-      border: 1px solid #aaa;
-      border-radius: 4px;
-      box-sizing: border-box;
+      width: 100%; padding: 8px; font-size: 1rem;
+      border: 1px solid #aaa; border-radius: 4px; box-sizing: border-box;
     }
     textarea { min-height: 90px; resize: vertical; }
     button {
-      padding: 10px 14px;
-      margin-right: 8px;
-      border-radius: 6px;
-      border: 1px solid #111;
-      background: #111;
-      color: #fff;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 8px;
+      padding: 10px 14px; margin-top: 8px;
+      border-radius: 6px; border: 1px solid #111;
+      background: #111; color: #fff; font-weight: 600;
+      cursor: pointer; width: 100%;
     }
     button.secondary { background: #fff; color: #111; border: 1px solid #111; }
-    @media (min-width:600px) { button { width: auto; } }
+    @media (min-width:600px) { button { width: auto; margin-right: 8px; } }
+    #previewContainer { margin-top: 16px; text-align: center; }
+    #previewTitle { font-weight: bold; margin-bottom: 8px; }
+    #previewGrid {
+      border-collapse: collapse; margin: 0 auto; user-select: none;
+    }
+    #previewGrid td {
+      width: 28px; height: 28px;
+      text-align: center; border: 1px solid #444; font-weight: bold;
+      font-size: 16px;
+    }
+    #previewVerse { margin-top: 12px; font-size: 0.95rem; text-align: center; }
+    #previewReference { text-align: center; font-style: italic; font-size: 0.9rem; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -79,8 +81,14 @@
   <button id="btnExport" class="secondary" disabled>Export PDFs</button>
   <button id="btnClear" class="secondary">Clear</button>
 
-  <div id="messages" style="margin-top:10px;color:#b33;font-weight:600;"></div>
-  <div id="preview"></div>
+  <div id="messages" style="margin-top:10px;color:#b33;font-weight:600;text-align:center;"></div>
+
+  <div id="previewContainer">
+    <div id="previewTitle"></div>
+    <table id="previewGrid"></table>
+    <div id="previewVerse"></div>
+    <div id="previewReference"></div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="script.js"></script>

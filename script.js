@@ -1,36 +1,26 @@
 (() => {
-  // ------------------------------
-  // BASIC ELEMENTS
-  // ------------------------------
   const el = (id) => document.getElementById(id);
 
   const titleInput = el("title");
   const verseInput = el("verse");
   const wordsInput = el("words");
   const refInput = el("reference");
-
   const btnGenerate = el("btnGenerate");
   const btnExport = el("btnExport");
   const btnClear = el("btnClear");
-
   const messages = el("messages");
+  const previewTitle = el("previewTitle");
+  const previewGrid = el("previewGrid");
+  const previewVerse = el("previewVerse");
+  const previewRef = el("previewReference");
 
-  // Optional preview elements (will exist once you re-add the grid preview)
-  const previewTitle = el("previewTitle") || document.createElement("div");
-  const previewGrid = el("previewGrid") || document.createElement("div");
-  const previewVerse = el("previewVerse") || document.createElement("div");
-  const previewRef = el("previewReference") || document.createElement("div");
-
-  // ------------------------------
-  // BIBLE VERSION LOADER
-  // ------------------------------
+  // Bible version loader
   let bibleData = {};
   const versionSelect = el("versionSelect");
   const bookSelect = el("bookSelect");
   const chapterSelect = el("chapterSelect");
   const verseSelect = el("verseSelect");
 
-  // book ID → name map
   const bookNumberMap = {
     1:"Genesis",2:"Exodus",3:"Leviticus",4:"Numbers",5:"Deuteronomy",
     6:"Joshua",7:"Judges",8:"Ruth",9:"1 Samuel",10:"2 Samuel",
@@ -56,12 +46,9 @@
     try {
       const res = await fetch(path);
       const data = await res.json();
-
-      // unwrap metadata if present
       let verses = data;
       if (data.verses && Array.isArray(data.verses)) verses = data.verses;
 
-      // convert to nested structure
       if (Array.isArray(verses)) {
         bibleData = {};
         for (const v of verses) {
@@ -75,7 +62,7 @@
           bibleData[book][ch][vs] = text.trim();
         }
       } else {
-        bibleData = data; // already nested
+        bibleData = data;
       }
       populateBooks();
     } catch (err) {
@@ -137,179 +124,102 @@
     refInput.value = `${book} ${chapter}:${verseNum}`;
   });
 
-  // ------------------------------
-  // PUZZLE GENERATION HELPERS
-  // ------------------------------
+  // Word Search core logic
   const sanitizeWord = (w) => w.toUpperCase().replace(/[^A-Z]/g, "").trim();
   const uniq = (arr) => [...new Set(arr)];
   const byLengthDesc = (a,b) => b.length - a.length;
-  const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
 
   function parseWords(raw) {
     if (!raw) return [];
     return uniq(raw.split(/[\n,; ]+/g).map(sanitizeWord).filter(Boolean)).sort(byLengthDesc);
   }
 
-  function cleanAndFormatVerse(raw) {
-    if (!raw) return "";
-    let text = raw.trim().replace(/\s+/g, " ");
-    let sentences = text.split(/([.?!])/).reduce((acc, part) => {
-      if (/[.?!]/.test(part) && acc.length) acc[acc.length-1]+=part;
-      else if (part.trim()) acc.push(part.trim());
-      return acc;
-    }, []);
-    return sentences.map(s=>{
-      s = s.replace(/\bi\b/g,"I");
-      return s.charAt(0).toUpperCase()+s.slice(1);
-    }).join(" ");
-  }
-
-  function hexToRGB(hex){
-    const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return m?{r:parseInt(m[1],16),g:parseInt(m[2],16),b:parseInt(m[3],16)}:{r:0,g:0,b:0};
-  }
-
-  function buildDirections(o){const d=[];if(o.allowH)d.push({dx:1,dy:0});if(o.allowV)d.push({dx:0,dy:1});if(o.allowD)d.push({dx:1,dy:1});if(o.allowBack){d.push({dx:-1,dy:0});d.push({dx:0,dy:-1});d.push({dx:-1,dy:-1});}return d;}
-
-  function canPlace(grid,word,r,c,dx,dy){
-    const N=grid.length;
-    const endR=r+dy*(word.length-1),endC=c+dx*(word.length-1);
-    if(endR<0||endR>=N||endC<0||endC>=N)return false;
-    for(let i=0;i<word.length;i++){
-      const rr=r+dy*i,cc=c+dx*i;
-      const existing=grid[rr][cc];
-      if(existing&&existing!==word[i])return false;
-    }
-    return true;
-  }
-
-  function placeWord(grid,word,dirs,maxTries=500){
-    const N=grid.length;
-    for(let t=0;t<maxTries;t++){
-      const d=dirs[Math.floor(Math.random()*dirs.length)],
-            r=Math.floor(Math.random()*N),
-            c=Math.floor(Math.random()*N);
-      if(!canPlace(grid,word,r,c,d.dx,d.dy))continue;
-      const cells=[];
-      for(let i=0;i<word.length;i++){
-        const rr=r+d.dy*i,cc=c+d.dx*i;
-        grid[rr][cc]=word[i];
-        cells.push({r:rr,c:cc});
-      }
-      return{ok:true,cells};
-    }
-    return{ok:false,cells:[]};
-  }
-
-  function generateGrid(words,opts){
-    const N=opts.size;
-    const grid=Array.from({length:N},()=>Array(N).fill(null));
-    const placed=[];
-    const dirs=buildDirections(opts);
-    for(const w of words){
-      if(w.length>N)continue;
-      const res=placeWord(grid,w,dirs);
-      if(res.ok)placed.push({word:w,cells:res.cells});
-    }
-    const ALPH="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    for(let r=0;r<N;r++){
-      for(let c=0;c<N;c++){
-        if(!grid[r][c])grid[r][c]=ALPH[Math.floor(Math.random()*ALPH.length)];
+  function generateGrid(words, N = 15) {
+    const grid = Array.from({ length: N }, () => Array(N).fill(null));
+    const placed = [];
+    const dirs = [{dx:1,dy:0},{dx:0,dy:1},{dx:1,dy:1},{dx:-1,dy:0},{dx:0,dy:-1},{dx:-1,dy:-1}];
+    for (const w of words) {
+      if (w.length > N) continue;
+      let placedOK = false;
+      for (let tries=0; tries<300 && !placedOK; tries++) {
+        const d = dirs[Math.floor(Math.random()*dirs.length)];
+        const r = Math.floor(Math.random()*N);
+        const c = Math.floor(Math.random()*N);
+        const endR = r + d.dy*(w.length-1);
+        const endC = c + d.dx*(w.length-1);
+        if (endR<0||endR>=N||endC<0||endC>=N) continue;
+        let fits=true;
+        for (let i=0;i<w.length;i++){
+          const rr=r+d.dy*i,cc=c+d.dx*i;
+          if (grid[rr][cc] && grid[rr][cc]!==w[i]) { fits=false; break; }
+        }
+        if (!fits) continue;
+        for (let i=0;i<w.length;i++) {
+          const rr=r+d.dy*i,cc=c+d.dx*i;
+          grid[rr][cc]=w[i];
+        }
+        placed.push({word:w});
+        placedOK=true;
       }
     }
-    return{grid,placed};
+    const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for(let r=0;r<N;r++) for(let c=0;c<N;c++)
+      if(!grid[r][c]) grid[r][c]=letters[Math.floor(Math.random()*letters.length)];
+    return grid;
   }
 
-  // ------------------------------
-  // PREVIEW + PDF EXPORT (unchanged)
-  // ------------------------------
-  const previewFontMap={helvetica:"Arial, Helvetica, sans-serif",times:"Times New Roman, Times, serif",courier:"Courier New, Courier, monospace"};
-
-  function highlightVerseHTML(verse,words){
-    const tokens=verse.split(/\b/);
-    const used=new Set();
-    for(let i=0;i<tokens.length;i++){
-      const w=tokens[i],up=w.toUpperCase();
-      if(words.includes(up)&&!used.has(up)){
-        tokens[i]=`<span style="font-weight:bold;text-decoration:underline">${w}</span>`;
-        used.add(up);
-      }
-    }
-    return tokens.join("");
-  }
-
-  function renderPreview(title,grid,verse,ref,words,opts){
-    previewTitle.textContent=title;
-    previewGrid.innerHTML="";
-    previewGrid.style.fontFamily=previewFontMap[opts.fontFamily]||"Arial";
-    const N=grid.length;
-    for(let r=0;r<N;r++){
-      const tr=document.createElement("tr");
-      for(let c=0;c<N;c++){
-        const td=document.createElement("td");
-        td.textContent=grid[r][c];
-        td.style.color=opts.letterColor;
-        td.style.border="1px solid #444";
+  function renderPreview(title, grid, verse, reference, words) {
+    previewTitle.textContent = title || "Word Search";
+    previewGrid.innerHTML = "";
+    for (let r=0;r<grid.length;r++) {
+      const tr = document.createElement("tr");
+      for (let c=0;c<grid[r].length;c++) {
+        const td = document.createElement("td");
+        td.textContent = grid[r][c];
         tr.appendChild(td);
       }
       previewGrid.appendChild(tr);
     }
-    previewVerse.innerHTML=highlightVerseHTML(verse,words);
-    previewRef.textContent=ref;
+    previewVerse.innerHTML = verse.replace(
+      new RegExp(words.join("|"), "gi"),
+      (m) => `<span style='font-weight:bold;text-decoration:underline'>${m}</span>`
+    );
+    previewRef.textContent = reference;
   }
 
-  function sanitizeFileName(name,fallback){
-    return (name||"").trim().replace(/[\\/:*?"<>|]+/g,"").replace(/\s+/g,"_")||fallback;
-  }
-
-  // ------------------------------
-  // DEFAULT OPTIONS + BUTTONS
-  // ------------------------------
-  btnGenerate.addEventListener("click",()=>{
-    const title=titleInput.value.trim(),
-          verse=cleanAndFormatVerse(verseInput.value),
-          words=parseWords(wordsInput.value),
-          reference=refInput.value.trim();
-
-    if(!verse){messages.textContent="Please paste or select a verse.";return;}
-    if(!words.length){messages.textContent="Please provide at least one target word.";return;}
-
-    const opts={
-      size:15,
-      allowH:true,
-      allowV:true,
-      allowD:true,
-      allowBack:true,
-      fontFamily:"helvetica",
-      letterColor:"#000000",
-      gridColor:"#000000",
-      circleColor:"#e6c200"
-    };
-
-    const {grid,placed}=generateGrid(words,opts);
-    renderPreview(title,grid,verse,reference,words,opts);
-    messages.textContent="Preview generated successfully.";
-    btnExport.disabled=false;
-
-    // Save for PDF
-    window._puzzleState={title,grid,placed,verse,reference,words,opts};
+  // Buttons
+  btnGenerate.addEventListener("click", () => {
+    const title = titleInput.value.trim();
+    const verse = verseInput.value.trim();
+    const words = parseWords(wordsInput.value);
+    const reference = refInput.value.trim();
+    if (!verse) { messages.textContent = "Please paste or select a verse."; return; }
+    if (!words.length) { messages.textContent = "Please provide at least one target word."; return; }
+    const grid = generateGrid(words, 15);
+    renderPreview(title, grid, verse, reference, words);
+    messages.textContent = "Preview generated successfully.";
+    btnExport.disabled = false;
+    window._puzzleState = { title, grid, verse, reference, words };
   });
 
-  btnExport.addEventListener("click",()=>{
-    if(!window._puzzleState)return alert("Generate a puzzle first!");
-    const { jsPDF }=window.jspdf;
-    const doc=new jsPDF({unit:"in",format:"letter"});
-    const {title,grid,verse,reference,words}=window._puzzleState;
-    doc.setFont("helvetica","bold");
-    doc.text(title||"Word Search",4.25,0.75,{align:"center"});
-    doc.text(reference,4.25,1.1,{align:"center"});
-    doc.text(verse,0.75,1.5,{maxWidth:7});
-    doc.save(sanitizeFileName(title,"WordSearch")+".pdf");
+  btnExport.addEventListener("click", () => {
+    if (!window._puzzleState) return alert("Generate a puzzle first!");
+    const { jsPDF } = window.jspdf;
+    const { title, grid, verse, reference } = window._puzzleState;
+    const doc = new jsPDF({ unit: "in", format: "letter" });
+    doc.setFont("helvetica", "bold");
+    doc.text(title || "Word Search", 4.25, 0.75, { align: "center" });
+    doc.text(reference, 4.25, 1.1, { align: "center" });
+    let y = 1.5;
+    grid.forEach(row => { doc.text(row.join(" "), 0.75, y); y += 0.22; });
+    doc.text(verse, 0.75, y + 0.3, { maxWidth: 7 });
+    doc.save(title ? `${title}.pdf` : "WordSearch.pdf");
   });
 
-  btnClear.addEventListener("click",()=>{
-    titleInput.value=verseInput.value=wordsInput.value=refInput.value="";
-    messages.textContent="";
-    btnExport.disabled=true;
+  btnClear.addEventListener("click", () => {
+    titleInput.value = verseInput.value = wordsInput.value = refInput.value = "";
+    previewGrid.innerHTML = previewTitle.textContent = previewVerse.textContent = previewRef.textContent = "";
+    messages.textContent = "";
+    btnExport.disabled = true;
   });
 })();
