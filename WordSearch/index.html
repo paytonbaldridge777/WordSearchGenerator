@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Bible Verse Word Search Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 24px; background: #fafafa; color: #111; }
+    h1 { margin-bottom: 16px; }
+    fieldset { border: 1px solid #ccc; padding: 12px; margin-bottom: 16px; border-radius: 6px; background: #fff; }
+    legend { font-weight: 600; }
+    label { display: block; margin: 8px 0 4px; }
+    input, textarea, select { width: 100%; padding: 8px; font-size: 1rem; border: 1px solid #aaa; border-radius: 4px; box-sizing: border-box; }
+    textarea { min-height: 90px; resize: vertical; }
+    button { padding: 10px 14px; margin-right: 8px; border-radius: 6px; border: 1px solid #111; background: #111; color: #fff; font-weight: 600; cursor: pointer; }
+    button.secondary { background: #fff; color: #111; }
+  </style>
+</head>
+<body>
+  <h1>Bible Verse Word Search Generator</h1>
+
+  <fieldset>
+    <legend>Load Bible Data</legend>
+    <input type="file" id="bibleFileInput" accept="application/json" />
+    <p style="font-size:0.9rem;color:#555;">Select your bible.json file to enable Book → Chapter → Verse dropdowns.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Select a Verse (optional)</legend>
+    <label for="bookSelect">Book</label>
+    <select id="bookSelect"><option value="">-- Select Book --</option></select>
+
+    <label for="chapterSelect">Chapter</label>
+    <select id="chapterSelect" disabled><option value="">-- Select Chapter --</option></select>
+
+    <label for="verseSelect">Verse</label>
+    <select id="verseSelect" disabled><option value="">-- Select Verse --</option></select>
+  </fieldset>
+
+  <fieldset>
+    <legend>Puzzle Details</legend>
+    <label for="title">Puzzle Title (optional)</label>
+    <input id="title" type="text" placeholder="e.g., Psalm 23 Word Search" />
+
+    <label for="verse">Bible Verse</label>
+    <textarea id="verse" placeholder="Paste or type verse here..."></textarea>
+
+    <label for="words">Target Words (subset of verse; comma or line separated)</label>
+    <textarea id="words" placeholder="LORD, shepherd, mercy"></textarea>
+
+    <label for="reference">Verse Reference</label>
+    <input id="reference" type="text" placeholder="Psalm 23:1" />
+  </fieldset>
+
+  <button id="btnGenerate">Generate Preview</button>
+  <button id="btnExport" class="secondary" disabled>Export PDFs</button>
+  <button id="btnClear" class="secondary">Clear</button>
+
+  <div id="messages" style="margin-top:10px;color:#b33;font-weight:600;"></div>
+
+  <div id="preview"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
