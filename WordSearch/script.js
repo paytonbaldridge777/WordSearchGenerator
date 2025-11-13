@@ -1,4 +1,23 @@
 (() => {
+  // ------------------ Theme Toggle ------------------
+  const themeToggle = document.getElementById("themeToggle");
+  const body = document.body;
+
+  // Load saved theme preference or default to light
+  const savedTheme = localStorage.getItem("theme") || "light";
+  if (savedTheme === "dark") {
+    body.classList.add("dark-theme");
+    themeToggle.textContent = "☀️ Light";
+  }
+
+  themeToggle.addEventListener("click", () => {
+    body.classList.toggle("dark-theme");
+    const isDark = body.classList.contains("dark-theme");
+    themeToggle.textContent = isDark ? "☀️ Light" : "🌙 Dark";
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  });
+
+  // ------------------ Main App ------------------
 	
 	
   let lastGrid = null, lastPlaced = [], lastWords = [], lastOptions = null, lastVerse = "", lastReference = "";
