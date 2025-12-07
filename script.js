@@ -110,7 +110,7 @@
   bookSelect.addEventListener("change", () => {
     const book = bookSelect.value;
     chapterSelect.innerHTML = "<option value=''>-- Select Chapter --</option>";
-    verseSelect.innerHTML   = "<option value=''>-- Select Verse --</option>";
+    verseSelect.innerHTML   = "";
     verseSelect.disabled = true;
 
     if (!book) { chapterSelect.disabled = true; return; }
@@ -127,7 +127,7 @@
   chapterSelect.addEventListener("change", () => {
     const book    = bookSelect.value;
     const chapter = chapterSelect.value;
-    verseSelect.innerHTML = "<option value=''>-- Select Verse --</option>";
+    verseSelect.innerHTML = "";
 
     if (!chapter) { verseSelect.disabled = true; return; }
     const verses = Object.keys(bibleData[book][chapter]);
@@ -143,10 +143,19 @@
   verseSelect.addEventListener("change", () => {
     const book    = bookSelect.value;
     const chapter = chapterSelect.value;
-    const verseNo = verseSelect.value;
-    if (!verseNo) return;
-    verseInput.value = bibleData[book][chapter][verseNo];
-    refInput.value   = `${book} ${chapter}:${verseNo}`;
+    const selectedOptions = Array.from(verseSelect.selectedOptions);
+    
+    if (!selectedOptions.length) return;
+    
+    // Collect verse numbers and texts
+    const verseNums = selectedOptions.map(opt => opt.value);
+    const verseTexts = verseNums.map(v => bibleData[book][chapter][v]);
+    
+    // Concatenate verse texts with single space
+    verseInput.value = verseTexts.join(" ");
+    
+    // Format reference as "Book Chapter:v1,v2,v3"
+    refInput.value = `${book} ${chapter}:${verseNums.join(",")}`;
   });
 
   // ------------------ Word search core ------------------
