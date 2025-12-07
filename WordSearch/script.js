@@ -152,7 +152,7 @@
 	bookSelect.addEventListener("change", () => {
 	  const book = bookSelect.value;
 	  chapterSelect.innerHTML = "<option value=''>-- Select Chapter --</option>";
-	  verseSelect.innerHTML = "<option value=''>-- Select Verse --</option>";
+	  verseSelect.innerHTML = "";
 	  verseSelect.disabled = true;
 
 	  if (!book) {
@@ -173,7 +173,7 @@
 	chapterSelect.addEventListener("change", () => {
 	  const book = bookSelect.value;
 	  const chapter = chapterSelect.value;
-	  verseSelect.innerHTML = "<option value=''>-- Select Verse --</option>";
+	  verseSelect.innerHTML = "";
 	  if (!chapter) {
 		verseSelect.disabled = true;
 		return;
@@ -188,15 +188,23 @@
 	  verseSelect.disabled = false;
 	});
 
-	// When a verse is chosen
+	// When verses are chosen (multi-select)
 	verseSelect.addEventListener("change", () => {
 	  const book = bookSelect.value;
 	  const chapter = chapterSelect.value;
-	  const verseNum = verseSelect.value;
-	  if (!verseNum) return;
-	  const verseText = bibleData[book][chapter][verseNum];
-	  verseArea.value = verseText;
-	  referenceInput.value = `${book} ${chapter}:${verseNum}`;
+	  const selectedOptions = Array.from(verseSelect.selectedOptions);
+	  
+	  if (!selectedOptions.length) return;
+	  
+	  // Collect verse numbers and texts
+	  const verseNums = selectedOptions.map(opt => opt.value);
+	  const verseTexts = verseNums.map(v => bibleData[book][chapter][v]);
+	  
+	  // Concatenate verse texts with single space
+	  verseArea.value = verseTexts.join(" ");
+	  
+	  // Format reference as "Book Chapter:v1,v2,v3"
+	  referenceInput.value = `${book} ${chapter}:${verseNums.join(",")}`;
 	});
 
 

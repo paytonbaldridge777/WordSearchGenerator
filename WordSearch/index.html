@@ -16,6 +16,9 @@
       --button-text: #fff;
       --button-secondary-bg: #fff;
       --button-secondary-text: #111;
+      --accent-color: #2563eb;
+      --accent-hover: #1d4ed8;
+      --select-bg: #e5e7eb;
     }
 
     body.dark-theme {
@@ -29,72 +32,123 @@
       --button-text: #111;
       --button-secondary-bg: #2d2d2d;
       --button-secondary-text: #e0e0e0;
+      --accent-color: #3b82f6;
+      --accent-hover: #2563eb;
+      --select-bg: #374151;
     }
 
     body { 
-      font-family: system-ui, Arial, sans-serif; 
-      margin: 24px; 
+      font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; 
+      margin: 0;
+      padding: 20px;
       background: var(--bg-primary); 
       color: var(--text-primary);
       transition: background-color 0.3s ease, color 0.3s ease;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
     }
     .header-container { 
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
-      margin-bottom: 16px; 
+      margin-bottom: 24px; 
     }
     h1 { 
       margin: 0; 
+      font-size: 1.75rem;
       flex: 1; 
       text-align: center; 
     }
     #themeToggle {
-      padding: 8px 12px;
-      border-radius: 6px;
+      padding: 10px 16px;
+      border-radius: 8px;
       border: 1px solid var(--border-primary);
       background: var(--bg-secondary);
       color: var(--text-primary);
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 500;
       transition: all 0.3s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     #themeToggle:hover {
-      opacity: 0.8;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     }
     fieldset { 
       border: 1px solid var(--border-primary); 
-      padding: 12px; 
-      margin-bottom: 16px; 
-      border-radius: 6px; 
+      padding: 20px; 
+      margin-bottom: 20px; 
+      border-radius: 12px; 
       background: var(--bg-secondary);
       transition: background-color 0.3s ease, border-color 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
-    legend { font-weight: 600; }
-    label { display: block; margin: 8px 0 4px; }
+    body.dark-theme fieldset {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    legend { 
+      font-weight: 600; 
+      font-size: 1.1rem;
+      padding: 0 10px;
+    }
+    label { 
+      display: block; 
+      margin: 14px 0 6px;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
     input, textarea, select { 
       width: 100%; 
-      padding: 8px; 
+      padding: 10px 12px; 
       font-size: 1rem; 
       border: 1px solid var(--border-secondary); 
-      border-radius: 4px; 
+      border-radius: 6px; 
       box-sizing: border-box;
       background: var(--bg-primary);
       color: var(--text-primary);
-      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+      transition: all 0.3s ease;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    body.dark-theme input:focus, 
+    body.dark-theme textarea:focus, 
+    body.dark-theme select:focus {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    select[multiple] {
+      min-height: 120px;
+    }
+    select[multiple] option {
+      padding: 6px 8px;
+    }
+    select[multiple] option:checked {
+      background: var(--select-bg);
     }
     textarea { min-height: 90px; resize: vertical; }
     button { 
-      padding: 10px 14px; 
-      margin-right: 8px; 
-      border-radius: 6px; 
-      border: 1px solid var(--button-bg); 
+      padding: 12px 20px; 
+      margin-right: 10px; 
+      border-radius: 8px; 
+      border: none; 
       background: var(--button-bg); 
       color: var(--button-text); 
-      font-weight: 600; 
+      font-weight: 600;
+      font-size: 1rem;
       cursor: pointer;
       transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
     button.secondary { 
       background: var(--button-secondary-bg); 
@@ -105,58 +159,59 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
-  </style>
 </head>
 <body>
-  <div class="header-container">
-    <div style="width: 100px;"></div>
-    <h1>Bible Verse Word Search Generator</h1>
-    <button id="themeToggle">🌙 Dark</button>
+  <div class="container">
+    <div class="header-container">
+      <div style="width: 120px;"></div>
+      <h1>Bible Verse Word Search Generator</h1>
+      <button id="themeToggle">🌙 Dark</button>
+    </div>
+
+    <fieldset>
+      <legend>Load Bible Data</legend>
+      <input type="file" id="bibleFileInput" accept="application/json" />
+      <p style="font-size:0.9rem;color:var(--text-secondary);margin-top:8px;">Select your bible.json file to enable Book → Chapter → Verse dropdowns.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Select Verses</legend>
+      <label for="bookSelect">Book</label>
+      <select id="bookSelect"><option value="">-- Select Book --</option></select>
+
+      <label for="chapterSelect">Chapter</label>
+      <select id="chapterSelect" disabled><option value="">-- Select Chapter --</option></select>
+
+      <label for="verseSelect">Verse(s)</label>
+      <select id="verseSelect" disabled multiple size="8"></select>
+    </fieldset>
+
+    <fieldset>
+      <legend>Puzzle Details</legend>
+      <label for="title">Puzzle Title (optional)</label>
+      <input id="title" type="text" placeholder="e.g., Psalm 23 Word Search" />
+
+      <label for="verse">Bible Verse</label>
+      <textarea id="verse" placeholder="Paste or type verse here..."></textarea>
+
+      <label for="words">Target Words (subset of verse; comma or line separated)</label>
+      <textarea id="words" placeholder="LORD, shepherd, mercy"></textarea>
+
+      <label for="reference">Verse Reference</label>
+      <input id="reference" type="text" placeholder="Psalm 23:1" />
+    </fieldset>
+
+    <button id="btnGenerate">Generate Preview</button>
+    <button id="btnExport" class="secondary" disabled>Export PDFs</button>
+    <button id="btnClear" class="secondary">Clear</button>
+
+    <div id="messages" style="margin-top:10px;color:#b33;font-weight:600;"></div>
+
+    <div id="preview"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
   </div>
-
-  <fieldset>
-    <legend>Load Bible Data</legend>
-    <input type="file" id="bibleFileInput" accept="application/json" />
-    <p style="font-size:0.9rem;color:var(--text-secondary);">Select your bible.json file to enable Book → Chapter → Verse dropdowns.</p>
-  </fieldset>
-
-  <fieldset>
-    <legend>Select a Verse (optional)</legend>
-    <label for="bookSelect">Book</label>
-    <select id="bookSelect"><option value="">-- Select Book --</option></select>
-
-    <label for="chapterSelect">Chapter</label>
-    <select id="chapterSelect" disabled><option value="">-- Select Chapter --</option></select>
-
-    <label for="verseSelect">Verse</label>
-    <select id="verseSelect" disabled><option value="">-- Select Verse --</option></select>
-  </fieldset>
-
-  <fieldset>
-    <legend>Puzzle Details</legend>
-    <label for="title">Puzzle Title (optional)</label>
-    <input id="title" type="text" placeholder="e.g., Psalm 23 Word Search" />
-
-    <label for="verse">Bible Verse</label>
-    <textarea id="verse" placeholder="Paste or type verse here..."></textarea>
-
-    <label for="words">Target Words (subset of verse; comma or line separated)</label>
-    <textarea id="words" placeholder="LORD, shepherd, mercy"></textarea>
-
-    <label for="reference">Verse Reference</label>
-    <input id="reference" type="text" placeholder="Psalm 23:1" />
-  </fieldset>
-
-  <button id="btnGenerate">Generate Preview</button>
-  <button id="btnExport" class="secondary" disabled>Export PDFs</button>
-  <button id="btnClear" class="secondary">Clear</button>
-
-  <div id="messages" style="margin-top:10px;color:#b33;font-weight:600;"></div>
-
-  <div id="preview"></div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="script.js"></script>
 </body>
 </html>
 
