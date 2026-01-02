@@ -334,12 +334,20 @@
       const bookName = v.book_name || v.bookName || v.book || "Unknown";
       const txt = String(v.content ?? v.text ?? v.Text ?? "").trim();
       
-      // Try to extract chapter and verse from verse_id (format: BBCCCVVV)
+      // Try to extract chapter and verse from verse_id (format: BBCCCVVV - 8 digits)
       let ch, vs;
       if (v.verse_id) {
-        const verseId = String(v.verse_id);
-        ch = String(parseInt(verseId.substring(2, 5)));
-        vs = String(parseInt(verseId.substring(5, 8)));
+        const verseId = String(v.verse_id).padStart(8, '0');
+        if (verseId.length >= 8) {
+          // Parse: BB (book) CCC (chapter) VVV (verse)
+          const CHAPTER_START = 2, CHAPTER_END = 5;
+          const VERSE_START = 5, VERSE_END = 8;
+          ch = String(parseInt(verseId.substring(CHAPTER_START, CHAPTER_END)));
+          vs = String(parseInt(verseId.substring(VERSE_START, VERSE_END)));
+        } else {
+          ch = String(v.chapter ?? v.Chapter ?? 1);
+          vs = String(v.verse ?? v.Verse ?? 1);
+        }
       } else {
         ch = String(v.chapter ?? v.Chapter ?? 1);
         vs = String(v.verse ?? v.Verse ?? 1);
