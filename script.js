@@ -144,6 +144,17 @@
           warnings: []
         };
       }
+      
+      // Flat array format (fallback for arrays with book/chapter/verse fields)
+      if (firstBook.book !== undefined || firstBook.Book !== undefined ||
+          firstBook.chapter !== undefined || firstBook.Chapter !== undefined) {
+        return {
+          success: true,
+          format: "FLAT_VERSE_ARRAY",
+          bookCount: new Set(data.map(v => v.book || v.Book)).size,
+          warnings: ["Using fallback parser for flat verse array"]
+        };
+      }
     }
 
     // Format 5: Simple book objects
@@ -377,6 +388,10 @@
       case "VERSE_ID_FORMAT":
         return parseVerseIDFormat(data);
       
+      case "FLAT_VERSE_ARRAY":
+        console.log("✓ Using fallback parser for flat verse array");
+        return parseFlatArray(data);
+      
       case "NORMALIZED":
         console.log("✓ Data is already normalized");
         // Filter out non-book keys
@@ -392,25 +407,34 @@
         // Fallback: try to parse as flat array
         if (Array.isArray(data)) {
           console.warn("⚠ Unknown format, attempting fallback parse as verse array");
-          const result = {};
-          for (const v of data) {
-            let book = v.book ?? v.Book ?? v.bookname ?? v.BookName ?? "Unknown";
-            if (!isNaN(book) && bookNumberMap[book]) {
-              book = bookNumberMap[book];
-            }
-            const ch = String(v.chapter ?? v.Chapter ?? 1);
-            const vs = String(v.verse ?? v.Verse ?? 1);
-            const txt = String(v.text ?? v.Text ?? v.content ?? "").trim();
-            
-            if (!result[book]) result[book] = {};
-            if (!result[book][ch]) result[book][ch] = {};
-            result[book][ch][vs] = txt;
-          }
-          return result;
+          return parseFlatArray(data);
         }
         
         throw new Error("Unable to parse Bible JSON - unrecognized format");
     }
+  }
+
+  /**
+   * Parses a flat array of verses (fallback parser)
+   * @param {Array} data - Array of verse objects
+   * @returns {Object} - Normalized Bible data
+   */
+  function parseFlatArray(data) {
+    const result = {};
+    for (const v of data) {
+      let book = v.book ?? v.Book ?? v.bookname ?? v.BookName ?? "Unknown";
+      if (!isNaN(book) && bookNumberMap[book]) {
+        book = bookNumberMap[book];
+      }
+      const ch = String(v.chapter ?? v.Chapter ?? 1);
+      const vs = String(v.verse ?? v.Verse ?? 1);
+      const txt = String(v.text ?? v.Text ?? v.content ?? "").trim();
+      
+      if (!result[book]) result[book] = {};
+      if (!result[book][ch]) result[book][ch] = {};
+      result[book][ch][vs] = txt;
+    }
+    return result;
   }
 
   versionSelect.addEventListener("change", async () => {
