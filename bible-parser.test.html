@@ -421,14 +421,17 @@
         // Try to extract chapter and verse from verse_id (format: BBCCCVVV - 8 digits)
         let ch, vs;
         if (v.verse_id) {
-          const verseId = String(v.verse_id).padStart(8, '0');
-          if (verseId.length >= 8) {
+          const verseId = String(v.verse_id);
+          // Only parse if verse_id is reasonably sized (1-8 digits)
+          if (verseId.length > 0 && verseId.length <= 8) {
+            const paddedId = verseId.padStart(8, '0');
             // Parse: BB (book) CCC (chapter) VVV (verse)
             const CHAPTER_START = 2, CHAPTER_END = 5;
             const VERSE_START = 5, VERSE_END = 8;
-            ch = String(parseInt(verseId.substring(CHAPTER_START, CHAPTER_END)));
-            vs = String(parseInt(verseId.substring(VERSE_START, VERSE_END)));
+            ch = String(parseInt(paddedId.substring(CHAPTER_START, CHAPTER_END)));
+            vs = String(parseInt(paddedId.substring(VERSE_START, VERSE_END)));
           } else {
+            // Fallback if verse_id format is unexpected
             ch = String(v.chapter ?? v.Chapter ?? 1);
             vs = String(v.verse ?? v.Verse ?? 1);
           }
