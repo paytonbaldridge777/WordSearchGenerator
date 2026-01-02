@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible Parser Test Suite</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #2563eb;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #555;
+      margin-top: 30px;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 8px;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .test-result {
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .test-result.pass {
+      background: #d1fae5;
+      border-left: 4px solid #10b981;
+    }
+    .test-result.fail {
+      background: #fee2e2;
+      border-left: 4px solid #ef4444;
+    }
+    .test-result .icon {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .test-result.pass .icon {
+      color: #10b981;
+    }
+    .test-result.fail .icon {
+      color: #ef4444;
+    }
+    .test-name {
+      font-weight: 600;
+      flex: 1;
+    }
+    .test-details {
+      font-size: 14px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .error-details {
+      background: #fef2f2;
+      padding: 8px;
+      margin-top: 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #991b1b;
+      white-space: pre-wrap;
+    }
+    .summary {
+      background: #2563eb;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .summary.all-pass {
+      background: #10b981;
+    }
+    .summary.has-failures {
+      background: #ef4444;
+    }
+    .instructions {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .instructions h3 {
+      margin-top: 0;
+      color: #1e40af;
+    }
+    .instructions ol {
+      margin: 10px 0;
+      padding-left: 25px;
+    }
+    .instructions li {
+      margin: 8px 0;
+    }
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 10px 5px 10px 0;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <h1>📖 Bible Parser Test Suite</h1>
+  
+  <div class="instructions">
+    <h3>🔧 How to Run Tests</h3>
+    <ol>
+      <li>Open this file (<code>bible-parser.test.html</code>) in a web browser</li>
+      <li>Click the "Run All Tests" button below</li>
+      <li>Review the test results - green indicates pass, red indicates failure</li>
+      <li>Check the browser console for detailed logs</li>
+      <li>To test with real Bible files, use the "Test Real Files" button</li>
+    </ol>
+    
+    <h3>➕ How to Add New Test Cases</h3>
+    <ol>
+      <li>Locate the <code>&lt;script&gt;</code> section at the bottom of this file</li>
+      <li>Add your test data to the appropriate <code>testData</code> object</li>
+      <li>Create a new test function following the pattern of existing tests</li>
+      <li>Add your test to the <code>runAllTests()</code> function</li>
+      <li>Refresh the page and click "Run All Tests"</li>
+    </ol>
+  </div>
+
+  <button onclick="runAllTests()">▶️ Run All Tests</button>
+  <button onclick="testRealFiles()">📚 Test Real Files</button>
+
+  <div id="summary"></div>
+  <div id="results"></div>
+
+  <script>
+    // Copy the parser functions from script.js
+    const bookNumberMap = {
+      1:"Genesis",2:"Exodus",3:"Leviticus",4:"Numbers",5:"Deuteronomy",
+      6:"Joshua",7:"Judges",8:"Ruth",9:"1 Samuel",10:"2 Samuel",
+      11:"1 Kings",12:"2 Kings",13:"1 Chronicles",14:"2 Chronicles",
+      15:"Ezra",16:"Nehemiah",17:"Esther",18:"Job",19:"Psalms",
+      20:"Proverbs",21:"Ecclesiastes",22:"Song of Solomon",23:"Isaiah",
+      24:"Jeremiah",25:"Lamentations",26:"Ezekiel",27:"Daniel",
+      28:"Hosea",29:"Joel",30:"Amos",31:"Obadiah",32:"Jonah",
+      33:"Micah",34:"Nahum",35:"Habakkuk",36:"Zephaniah",
+      37:"Haggai",38:"Zechariah",39:"Malachi",40:"Matthew",
+      41:"Mark",42:"Luke",43:"John",44:"Acts",45:"Romans",
+      46:"1 Corinthians",47:"2 Corinthians",48:"Galatians",
+      49:"Ephesians",50:"Philippians",51:"Colossians",
+      52:"1 Thessalonians",53:"2 Thessalonians",54:"1 Timothy",
+      55:"2 Timothy",56:"Titus",57:"Philemon",58:"Hebrews",
+      59:"James",60:"1 Peter",61:"2 Peter",62:"1 John",
+      63:"2 John",64:"3 John",65:"Jude",66:"Revelation"
+    };
+
+    const bookAbbrevMap = {
+      "gn":"Genesis","ex":"Exodus","lv":"Leviticus","nu":"Numbers","dt":"Deuteronomy",
+      "js":"Joshua","jg":"Judges","rt":"Ruth","1sm":"1 Samuel","2sm":"2 Samuel",
+      "1kg":"1 Kings","2kg":"2 Kings","1ch":"1 Chronicles","2ch":"2 Chronicles",
+      "er":"Ezra","ne":"Nehemiah","et":"Esther","jb":"Job","ps":"Psalms",
+      "pr":"Proverbs","ec":"Ecclesiastes","sng":"Song of Solomon","is":"Isaiah",
+      "jr":"Jeremiah","lm":"Lamentations","ez":"Ezekiel","dn":"Daniel",
+      "ho":"Hosea","jl":"Joel","am":"Amos","ob":"Obadiah","jn":"Jonah",
+      "mc":"Micah","na":"Nahum","hk":"Habakkuk","zp":"Zephaniah",
+      "hg":"Haggai","zc":"Zechariah","ml":"Malachi","mt":"Matthew",
+      "mk":"Mark","lk":"Luke","jh":"John","ac":"Acts","ro":"Romans",
+      "1co":"1 Corinthians","2co":"2 Corinthians","ga":"Galatians",
+      "ep":"Ephesians","ph":"Philippians","cl":"Colossians",
+      "1th":"1 Thessalonians","2th":"2 Thessalonians","1tm":"1 Timothy",
+      "2tm":"2 Timothy","tt":"Titus","pm":"Philemon","hb":"Hebrews",
+      "jm":"James","1pe":"1 Peter","2pe":"2 Peter","1jn":"1 John",
+      "2jn":"2 John","3jn":"3 John","jd":"Jude","rv":"Revelation"
+    };
+
+    function validateBibleJSON(data) {
+      if (!data || typeof data !== "object") {
+        return {
+          success: false,
+          error: "Invalid JSON: Data is not an object or array",
+          suggestions: ["Ensure the file contains valid JSON data"]
+        };
+      }
+
+      if (data.verses && Array.isArray(data.verses)) {
+        const sampleVerse = data.verses[0];
+        if (sampleVerse && (sampleVerse.book !== undefined || sampleVerse.Book !== undefined)) {
+          return {
+            success: true,
+            format: "KJV_VERSE_ARRAY",
+            bookCount: new Set(data.verses.map(v => v.book || v.Book)).size,
+            warnings: []
+          };
+        }
+      }
+
+      if (data.resultset && data.resultset.row && Array.isArray(data.resultset.row)) {
+        const sampleRow = data.resultset.row[0];
+        if (sampleRow && sampleRow.field && Array.isArray(sampleRow.field) && sampleRow.field.length >= 5) {
+          return {
+            success: true,
+            format: "ASV_RESULTSET",
+            bookCount: new Set(data.resultset.row.map(r => r.field[1])).size,
+            warnings: []
+          };
+        }
+      }
+
+      if (Array.isArray(data) && data.length > 0) {
+        const firstBook = data[0];
+        if (firstBook.chapters && Array.isArray(firstBook.chapters)) {
+          return {
+            success: true,
+            format: "BBE_CHAPTER_ARRAYS",
+            bookCount: data.length,
+            warnings: []
+          };
+        }
+        
+        if (firstBook.verse_id !== undefined || firstBook.book_name !== undefined) {
+          return {
+            success: true,
+            format: "VERSE_ID_FORMAT",
+            bookCount: new Set(data.map(v => v.book_name)).size,
+            warnings: []
+          };
+        }
+      }
+
+      if (data.books && Array.isArray(data.books)) {
+        const sampleBook = data.books[0];
+        if (sampleBook && sampleBook.name && sampleBook.verses && Array.isArray(sampleBook.verses)) {
+          return {
+            success: true,
+            format: "SIMPLE_BOOK_OBJECTS",
+            bookCount: data.books.length,
+            warnings: []
+          };
+        }
+      }
+
+      if (!Array.isArray(data)) {
+        const keys = Object.keys(data);
+        const bookKeys = keys.filter(k => k !== "metadata" && k !== "resultset" && k !== "verses" && k !== "books");
+        if (bookKeys.length > 0) {
+          const firstBook = data[bookKeys[0]];
+          if (firstBook && typeof firstBook === "object" && !Array.isArray(firstBook)) {
+            const chapters = Object.keys(firstBook);
+            if (chapters.length > 0) {
+              const firstChapter = firstBook[chapters[0]];
+              if (firstChapter && typeof firstChapter === "object") {
+                return {
+                  success: true,
+                  format: "NORMALIZED",
+                  bookCount: bookKeys.length,
+                  warnings: []
+                };
+              }
+            }
+          }
+        }
+      }
+
+      return {
+        success: false,
+        error: "No recognizable Bible structure found",
+        suggestions: [
+          "Check if file contains 'verses', 'resultset', or book objects",
+          "Verify the JSON structure matches one of the supported formats",
+          "Ensure the file contains actual Bible data"
+        ]
+      };
+    }
+
+    function parseKJVFormat(data) {
+      const verses = data.verses;
+      const result = {};
+      
+      for (const v of verses) {
+        let book = v.book ?? v.Book ?? v.bookname ?? v.BookName ?? "Unknown";
+        if (!isNaN(book) && bookNumberMap[book]) {
+          book = bookNumberMap[book];
+        }
+        const ch = String(v.chapter ?? v.Chapter ?? 1);
+        const vs = String(v.verse ?? v.Verse ?? 1);
+        const txt = String(v.text ?? v.Text ?? v.content ?? "").trim();
+        
+        if (!result[book]) result[book] = {};
+        if (!result[book][ch]) result[book][ch] = {};
+        result[book][ch][vs] = txt;
+      }
+      
+      return result;
+    }
+
+    function parseASVFormat(data) {
+      const rows = data.resultset.row;
+      const result = {};
+      
+      for (const row of rows) {
+        const field = row.field;
+        const bookNum = field[1];
+        let book = bookNumberMap[bookNum] || "Unknown";
+        const ch = String(field[2]);
+        const vs = String(field[3]);
+        const txt = String(field[4] || "").trim();
+        
+        if (!result[book]) result[book] = {};
+        if (!result[book][ch]) result[book][ch] = {};
+        result[book][ch][vs] = txt;
+      }
+      
+      return result;
+    }
+
+    function parseBBEFormat(data) {
+      const result = {};
+      
+      for (const bookObj of data) {
+        let bookName = bookObj.name || bookObj.Name;
+        
+        if (!bookName && bookObj.abbrev) {
+          bookName = bookAbbrevMap[bookObj.abbrev.toLowerCase()] || bookObj.abbrev;
+        }
+        
+        if (!bookName) continue;
+        
+        result[bookName] = {};
+        const chapters = bookObj.chapters || [];
+        
+        for (let chIdx = 0; chIdx < chapters.length; chIdx++) {
+          const chNum = String(chIdx + 1);
+          result[bookName][chNum] = {};
+          const verses = chapters[chIdx];
+          
+          if (Array.isArray(verses)) {
+            for (let vIdx = 0; vIdx < verses.length; vIdx++) {
+              const vNum = String(vIdx + 1);
+              result[bookName][chNum][vNum] = String(verses[vIdx] || "").trim();
+            }
+          }
+        }
+      }
+      
+      return result;
+    }
+
+    function parseSimpleBookObjects(data) {
+      const books = data.books;
+      const result = {};
+      
+      for (const bookObj of books) {
+        const bookName = bookObj.name || bookObj.Name || "Unknown";
+        result[bookName] = {};
+        
+        const verses = bookObj.verses || [];
+        for (const v of verses) {
+          const ch = String(v.chapter ?? v.Chapter ?? 1);
+          const vs = String(v.verse ?? v.Verse ?? 1);
+          const txt = String(v.text ?? v.Text ?? v.content ?? "").trim();
+          
+          if (!result[bookName][ch]) result[bookName][ch] = {};
+          result[bookName][ch][vs] = txt;
+        }
+      }
+      
+      return result;
+    }
+
+    function parseVerseIDFormat(data) {
+      const result = {};
+      
+      for (const v of data) {
+        const bookName = v.book_name || v.bookName || v.book || "Unknown";
+        const txt = String(v.content ?? v.text ?? v.Text ?? "").trim();
+        
+        let ch, vs;
+        if (v.verse_id) {
+          const verseId = String(v.verse_id);
+          ch = String(parseInt(verseId.substring(2, 5)));
+          vs = String(parseInt(verseId.substring(5, 8)));
+        } else {
+          ch = String(v.chapter ?? v.Chapter ?? 1);
+          vs = String(v.verse ?? v.Verse ?? 1);
+        }
+        
+        if (!result[bookName]) result[bookName] = {};
+        if (!result[bookName][ch]) result[bookName][ch] = {};
+        result[bookName][ch][vs] = txt;
+      }
+      
+      return result;
+    }
+
+    function parseBibleJSON(data) {
+      const validation = validateBibleJSON(data);
+      
+      if (!validation.success) {
+        console.error("Bible JSON validation failed:", validation.error);
+        console.error("Suggestions:", validation.suggestions);
+        throw new Error(validation.error);
+      }
+      
+      console.log(`✓ Detected Bible format: ${validation.format}`);
+      console.log(`✓ Books found: ${validation.bookCount}`);
+      
+      switch (validation.format) {
+        case "KJV_VERSE_ARRAY":
+          return parseKJVFormat(data);
+        
+        case "ASV_RESULTSET":
+          return parseASVFormat(data);
+        
+        case "BBE_CHAPTER_ARRAYS":
+          return parseBBEFormat(data);
+        
+        case "SIMPLE_BOOK_OBJECTS":
+          return parseSimpleBookObjects(data);
+        
+        case "VERSE_ID_FORMAT":
+          return parseVerseIDFormat(data);
+        
+        case "NORMALIZED":
+          console.log("✓ Data is already normalized");
+          const result = {};
+          for (const key of Object.keys(data)) {
+            if (key !== "metadata" && key !== "resultset" && key !== "verses" && key !== "books") {
+              result[key] = data[key];
+            }
+          }
+          return result;
+        
+        default:
+          if (Array.isArray(data)) {
+            console.warn("⚠ Unknown format, attempting fallback parse as verse array");
+            const result = {};
+            for (const v of data) {
+              let book = v.book ?? v.Book ?? v.bookname ?? v.BookName ?? "Unknown";
+              if (!isNaN(book) && bookNumberMap[book]) {
+                book = bookNumberMap[book];
+              }
+              const ch = String(v.chapter ?? v.Chapter ?? 1);
+              const vs = String(v.verse ?? v.Verse ?? 1);
+              const txt = String(v.text ?? v.Text ?? v.content ?? "").trim();
+              
+              if (!result[book]) result[book] = {};
+              if (!result[book][ch]) result[book][ch] = {};
+              result[book][ch][vs] = txt;
+            }
+            return result;
+          }
+          
+          throw new Error("Unable to parse Bible JSON - unrecognized format");
+      }
+    }
+
+    // Test Data
+    const testData = {
+      kjvFormat: {
+        metadata: { version: "KJV" },
+        verses: [
+          { book: 1, chapter: 1, verse: 1, text: "In the beginning God created the heaven and the earth." },
+          { book: 1, chapter: 1, verse: 2, text: "And the earth was without form, and void;" },
+          { book: 40, chapter: 1, verse: 1, text: "The book of the generation of Jesus Christ" }
+        ]
+      },
+      
+      asvFormat: {
+        resultset: {
+          row: [
+            { field: [1001001, 1, 1, 1, "In the beginning God created the heavens and the earth."] },
+            { field: [1001002, 1, 1, 2, "And the earth was waste and void;"] },
+            { field: [40001001, 40, 1, 1, "The book of the generation of Jesus Christ"] }
+          ]
+        }
+      },
+      
+      bbeFormat: [
+        {
+          abbrev: "gn",
+          name: "Genesis",
+          chapters: [
+            [
+              "At the first God made the heaven and the earth.",
+              "And the earth was waste and without form;"
+            ]
+          ]
+        },
+        {
+          abbrev: "mt",
+          name: "Matthew",
+          chapters: [
+            ["The book of the generations of Jesus Christ"]
+          ]
+        }
+      ],
+      
+      normalizedFormat: {
+        "Genesis": {
+          "1": {
+            "1": "In the beginning God created the heaven and the earth.",
+            "2": "And the earth was without form, and void;"
+          }
+        },
+        "Matthew": {
+          "1": {
+            "1": "The book of the generation of Jesus Christ"
+          }
+        }
+      },
+      
+      simpleBookObjects: {
+        books: [
+          {
+            name: "Genesis",
+            verses: [
+              { chapter: 1, verse: 1, text: "In the beginning God created the heaven and the earth." },
+              { chapter: 1, verse: 2, text: "And the earth was without form, and void;" }
+            ]
+          },
+          {
+            name: "Matthew",
+            verses: [
+              { chapter: 1, verse: 1, text: "The book of the generation of Jesus Christ" }
+            ]
+          }
+        ]
+      },
+      
+      verseIDFormat: [
+        { verse_id: "01001001", book_name: "Genesis", content: "In the beginning God created the heaven and the earth." },
+        { verse_id: "01001002", book_name: "Genesis", content: "And the earth was without form, and void;" },
+        { verse_id: "40001001", book_name: "Matthew", content: "The book of the generation of Jesus Christ" }
+      ],
+      
+      flatArray: [
+        { book: 1, chapter: 1, verse: 1, text: "In the beginning God created the heaven and the earth." },
+        { Book: 40, Chapter: 1, Verse: 1, Text: "The book of the generation of Jesus Christ" }
+      ]
+    };
+
+    // Test runner
+    let testResults = [];
+    
+    function addTestResult(name, passed, details = "", error = null) {
+      testResults.push({ name, passed, details, error });
+    }
+
+    function displayResults() {
+      const resultsDiv = document.getElementById('results');
+      const summaryDiv = document.getElementById('summary');
+      
+      resultsDiv.innerHTML = '';
+      
+      const passed = testResults.filter(r => r.passed).length;
+      const failed = testResults.filter(r => !r.passed).length;
+      const total = testResults.length;
+      
+      let summaryClass = 'summary';
+      if (failed === 0 && passed > 0) {
+        summaryClass += ' all-pass';
+      } else if (failed > 0) {
+        summaryClass += ' has-failures';
+      }
+      
+      summaryDiv.innerHTML = `
+        <div class="${summaryClass}">
+          <span>📊 Test Results: ${passed} passed, ${failed} failed out of ${total} total</span>
+          <span>${failed === 0 && passed > 0 ? '✅ All tests passed!' : failed > 0 ? '❌ Some tests failed' : '⏳ Run tests'}</span>
+        </div>
+      `;
+      
+      let currentSection = '';
+      for (const result of testResults) {
+        const section = result.name.split(':')[0];
+        if (section !== currentSection) {
+          currentSection = section;
+          resultsDiv.innerHTML += `<h2>${section}</h2><div class="test-section" id="section-${section.replace(/\s+/g, '-')}"></div>`;
+        }
+        
+        const sectionDiv = document.getElementById(`section-${section.replace(/\s+/g, '-')}`);
+        const resultDiv = document.createElement('div');
+        resultDiv.className = `test-result ${result.passed ? 'pass' : 'fail'}`;
+        
+        let content = `
+          <span class="icon">${result.passed ? '✓' : '✗'}</span>
+          <div style="flex: 1;">
+            <div class="test-name">${result.name}</div>
+            ${result.details ? `<div class="test-details">${result.details}</div>` : ''}
+            ${result.error ? `<div class="error-details">${result.error}</div>` : ''}
+          </div>
+        `;
+        
+        resultDiv.innerHTML = content;
+        sectionDiv.appendChild(resultDiv);
+      }
+    }
+
+    // Individual Tests
+    function testValidation() {
+      // Test valid KJV format
+      try {
+        const result = validateBibleJSON(testData.kjvFormat);
+        addTestResult(
+          'Validation: KJV format detection',
+          result.success && result.format === "KJV_VERSE_ARRAY",
+          `Format: ${result.format}, Books: ${result.bookCount}`
+        );
+      } catch (e) {
+        addTestResult('Validation: KJV format detection', false, '', e.message);
+      }
+
+      // Test valid ASV format
+      try {
+        const result = validateBibleJSON(testData.asvFormat);
+        addTestResult(
+          'Validation: ASV format detection',
+          result.success && result.format === "ASV_RESULTSET",
+          `Format: ${result.format}, Books: ${result.bookCount}`
+        );
+      } catch (e) {
+        addTestResult('Validation: ASV format detection', false, '', e.message);
+      }
+
+      // Test valid BBE format
+      try {
+        const result = validateBibleJSON(testData.bbeFormat);
+        addTestResult(
+          'Validation: BBE format detection',
+          result.success && result.format === "BBE_CHAPTER_ARRAYS",
+          `Format: ${result.format}, Books: ${result.bookCount}`
+        );
+      } catch (e) {
+        addTestResult('Validation: BBE format detection', false, '', e.message);
+      }
+
+      // Test normalized format
+      try {
+        const result = validateBibleJSON(testData.normalizedFormat);
+        addTestResult(
+          'Validation: Normalized format detection',
+          result.success && result.format === "NORMALIZED",
+          `Format: ${result.format}, Books: ${result.bookCount}`
+        );
+      } catch (e) {
+        addTestResult('Validation: Normalized format detection', false, '', e.message);
+      }
+
+      // Test simple book objects format
+      try {
+        const result = validateBibleJSON(testData.simpleBookObjects);
+        addTestResult(
+          'Validation: Simple book objects detection',
+          result.success && result.format === "SIMPLE_BOOK_OBJECTS",
+          `Format: ${result.format}, Books: ${result.bookCount}`
+        );
+      } catch (e) {
+        addTestResult('Validation: Simple book objects detection', false, '', e.message);
+      }
+
+      // Test verse ID format
+      try {
+        const result = validateBibleJSON(testData.verseIDFormat);
+        addTestResult(
+          'Validation: Verse ID format detection',
+          result.success && result.format === "VERSE_ID_FORMAT",
+          `Format: ${result.format}, Books: ${result.bookCount}`
+        );
+      } catch (e) {
+        addTestResult('Validation: Verse ID format detection', false, '', e.message);
+      }
+
+      // Test invalid data
+      try {
+        const result = validateBibleJSON({ invalid: "data" });
+        addTestResult(
+          'Validation: Invalid format rejection',
+          !result.success && result.error.includes("No recognizable"),
+          `Error: ${result.error}`
+        );
+      } catch (e) {
+        addTestResult('Validation: Invalid format rejection', false, '', e.message);
+      }
+
+      // Test null data
+      try {
+        const result = validateBibleJSON(null);
+        addTestResult(
+          'Validation: Null data rejection',
+          !result.success,
+          `Error: ${result.error}`
+        );
+      } catch (e) {
+        addTestResult('Validation: Null data rejection', false, '', e.message);
+      }
+    }
+
+    function testParsers() {
+      // Test KJV parser
+      try {
+        const parsed = parseBibleJSON(testData.kjvFormat);
+        const hasGenesis = parsed["Genesis"] !== undefined;
+        const hasVerse = parsed["Genesis"] && parsed["Genesis"]["1"] && parsed["Genesis"]["1"]["1"];
+        addTestResult(
+          'Parser: KJV format parsing',
+          hasGenesis && hasVerse,
+          `Genesis 1:1 = "${hasVerse ? parsed["Genesis"]["1"]["1"].substring(0, 30) + '...' : 'missing'}"`
+        );
+      } catch (e) {
+        addTestResult('Parser: KJV format parsing', false, '', e.message);
+      }
+
+      // Test ASV parser
+      try {
+        const parsed = parseBibleJSON(testData.asvFormat);
+        const hasGenesis = parsed["Genesis"] !== undefined;
+        const hasVerse = parsed["Genesis"] && parsed["Genesis"]["1"] && parsed["Genesis"]["1"]["1"];
+        addTestResult(
+          'Parser: ASV format parsing',
+          hasGenesis && hasVerse,
+          `Genesis 1:1 = "${hasVerse ? parsed["Genesis"]["1"]["1"].substring(0, 30) + '...' : 'missing'}"`
+        );
+      } catch (e) {
+        addTestResult('Parser: ASV format parsing', false, '', e.message);
+      }
+
+      // Test BBE parser
+      try {
+        const parsed = parseBibleJSON(testData.bbeFormat);
+        const hasGenesis = parsed["Genesis"] !== undefined;
+        const hasVerse = parsed["Genesis"] && parsed["Genesis"]["1"] && parsed["Genesis"]["1"]["1"];
+        addTestResult(
+          'Parser: BBE format parsing',
+          hasGenesis && hasVerse,
+          `Genesis 1:1 = "${hasVerse ? parsed["Genesis"]["1"]["1"].substring(0, 30) + '...' : 'missing'}"`
+        );
+      } catch (e) {
+        addTestResult('Parser: BBE format parsing', false, '', e.message);
+      }
+
+      // Test normalized format
+      try {
+        const parsed = parseBibleJSON(testData.normalizedFormat);
+        const hasGenesis = parsed["Genesis"] !== undefined;
+        const hasVerse = parsed["Genesis"] && parsed["Genesis"]["1"] && parsed["Genesis"]["1"]["1"];
+        addTestResult(
+          'Parser: Normalized format handling',
+          hasGenesis && hasVerse,
+          `Genesis 1:1 = "${hasVerse ? parsed["Genesis"]["1"]["1"].substring(0, 30) + '...' : 'missing'}"`
+        );
+      } catch (e) {
+        addTestResult('Parser: Normalized format handling', false, '', e.message);
+      }
+
+      // Test simple book objects
+      try {
+        const parsed = parseBibleJSON(testData.simpleBookObjects);
+        const hasGenesis = parsed["Genesis"] !== undefined;
+        const hasVerse = parsed["Genesis"] && parsed["Genesis"]["1"] && parsed["Genesis"]["1"]["1"];
+        addTestResult(
+          'Parser: Simple book objects parsing',
+          hasGenesis && hasVerse,
+          `Genesis 1:1 = "${hasVerse ? parsed["Genesis"]["1"]["1"].substring(0, 30) + '...' : 'missing'}"`
+        );
+      } catch (e) {
+        addTestResult('Parser: Simple book objects parsing', false, '', e.message);
+      }
+
+      // Test verse ID format
+      try {
+        const parsed = parseBibleJSON(testData.verseIDFormat);
+        const hasGenesis = parsed["Genesis"] !== undefined;
+        const hasVerse = parsed["Genesis"] && parsed["Genesis"]["1"] && parsed["Genesis"]["1"]["1"];
+        addTestResult(
+          'Parser: Verse ID format parsing',
+          hasGenesis && hasVerse,
+          `Genesis 1:1 = "${hasVerse ? parsed["Genesis"]["1"]["1"].substring(0, 30) + '...' : 'missing'}"`
+        );
+      } catch (e) {
+        addTestResult('Parser: Verse ID format parsing', false, '', e.message);
+      }
+
+      // Test book number to name conversion
+      try {
+        const parsed = parseBibleJSON(testData.kjvFormat);
+        const hasMatthew = parsed["Matthew"] !== undefined;
+        addTestResult(
+          'Parser: Book number to name conversion',
+          hasMatthew,
+          `Book 40 converted to "Matthew": ${hasMatthew}`
+        );
+      } catch (e) {
+        addTestResult('Parser: Book number to name conversion', false, '', e.message);
+      }
+
+      // Test field name variations
+      try {
+        const parsed = parseBibleJSON(testData.flatArray);
+        const hasGenesis = parsed["Genesis"] !== undefined;
+        const hasMatthew = parsed["Matthew"] !== undefined;
+        addTestResult(
+          'Parser: Field name variations (book/Book)',
+          hasGenesis && hasMatthew,
+          `Handles both lowercase and uppercase field names`
+        );
+      } catch (e) {
+        addTestResult('Parser: Field name variations', false, '', e.message);
+      }
+    }
+
+    function testIntegration() {
+      // Test that all formats produce identical structure
+      try {
+        const kjv = parseBibleJSON(testData.kjvFormat);
+        const asv = parseBibleJSON(testData.asvFormat);
+        const bbe = parseBibleJSON(testData.bbeFormat);
+        const normalized = parseBibleJSON(testData.normalizedFormat);
+        
+        const kjvVerse = kjv["Genesis"]["1"]["1"];
+        const asvVerse = asv["Genesis"]["1"]["1"];
+        const bbeVerse = bbe["Genesis"]["1"]["1"];
+        const normVerse = normalized["Genesis"]["1"]["1"];
+        
+        const allHaveVerse = kjvVerse && asvVerse && bbeVerse && normVerse;
+        const allHaveGenesis = kjv["Genesis"] && asv["Genesis"] && bbe["Genesis"] && normalized["Genesis"];
+        
+        addTestResult(
+          'Integration: All formats produce same structure',
+          allHaveVerse && allHaveGenesis,
+          `All formats have Genesis 1:1 in same location`
+        );
+      } catch (e) {
+        addTestResult('Integration: All formats produce same structure', false, '', e.message);
+      }
+
+      // Test end-to-end parsing
+      try {
+        for (const [formatName, data] of Object.entries(testData)) {
+          const parsed = parseBibleJSON(data);
+          const hasBooks = Object.keys(parsed).length > 0;
+          if (!hasBooks) {
+            throw new Error(`Format ${formatName} produced empty result`);
+          }
+        }
+        addTestResult(
+          'Integration: End-to-end parsing',
+          true,
+          `All ${Object.keys(testData).length} formats parsed successfully`
+        );
+      } catch (e) {
+        addTestResult('Integration: End-to-end parsing', false, '', e.message);
+      }
+    }
+
+    function runAllTests() {
+      testResults = [];
+      console.clear();
+      console.log('🧪 Starting Bible Parser Test Suite...\n');
+      
+      testValidation();
+      testParsers();
+      testIntegration();
+      
+      displayResults();
+      
+      const passed = testResults.filter(r => r.passed).length;
+      const failed = testResults.filter(r => !r.passed).length;
+      
+      console.log(`\n📊 Test Summary: ${passed} passed, ${failed} failed`);
+      if (failed === 0 && passed > 0) {
+        console.log('✅ All tests passed!');
+      }
+    }
+
+    async function testRealFiles() {
+      testResults = [];
+      console.clear();
+      console.log('📚 Testing real Bible files...\n');
+      
+      const files = [
+        { path: 'Bibles/kjv.json', name: 'KJV' },
+        { path: 'Bibles/bbe.json', name: 'BBE' },
+        { path: 'Bibles/asv.json', name: 'ASV' }
+      ];
+      
+      for (const file of files) {
+        try {
+          const response = await fetch(file.path);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          const parsed = parseBibleJSON(data);
+          
+          const bookCount = Object.keys(parsed).length;
+          const sampleBook = Object.keys(parsed)[0];
+          const chapterCount = sampleBook ? Object.keys(parsed[sampleBook]).length : 0;
+          
+          addTestResult(
+            `Real Files: ${file.name}`,
+            bookCount > 0,
+            `Loaded ${bookCount} books, first book "${sampleBook}" has ${chapterCount} chapters`
+          );
+        } catch (e) {
+          addTestResult(`Real Files: ${file.name}`, false, '', e.message);
+        }
+      }
+      
+      displayResults();
+    }
+
+    // Auto-run tests on page load
+    window.addEventListener('load', () => {
+      console.log('📖 Bible Parser Test Suite loaded. Click "Run All Tests" to begin.');
+    });
+  </script>
+</body>
+</html>

@@ -61,37 +61,381 @@
     63:"2 John",64:"3 John",65:"Jude",66:"Revelation"
   };
 
+  // Book abbreviation to full name mapping for BBE format
+  const bookAbbrevMap = {
+    "gn":"Genesis","ex":"Exodus","lv":"Leviticus","nu":"Numbers","dt":"Deuteronomy",
+    "js":"Joshua","jg":"Judges","rt":"Ruth","1sm":"1 Samuel","2sm":"2 Samuel",
+    "1kg":"1 Kings","2kg":"2 Kings","1ch":"1 Chronicles","2ch":"2 Chronicles",
+    "er":"Ezra","ne":"Nehemiah","et":"Esther","jb":"Job","ps":"Psalms",
+    "pr":"Proverbs","ec":"Ecclesiastes","sng":"Song of Solomon","is":"Isaiah",
+    "jr":"Jeremiah","lm":"Lamentations","ez":"Ezekiel","dn":"Daniel",
+    "ho":"Hosea","jl":"Joel","am":"Amos","ob":"Obadiah","jn":"Jonah",
+    "mc":"Micah","na":"Nahum","hk":"Habakkuk","zp":"Zephaniah",
+    "hg":"Haggai","zc":"Zechariah","ml":"Malachi","mt":"Matthew",
+    "mk":"Mark","lk":"Luke","jh":"John","ac":"Acts","ro":"Romans",
+    "1co":"1 Corinthians","2co":"2 Corinthians","ga":"Galatians",
+    "ep":"Ephesians","ph":"Philippians","cl":"Colossians",
+    "1th":"1 Thessalonians","2th":"2 Thessalonians","1tm":"1 Timothy",
+    "2tm":"2 Timothy","tt":"Titus","pm":"Philemon","hb":"Hebrews",
+    "jm":"James","1pe":"1 Peter","2pe":"2 Peter","1jn":"1 John",
+    "2jn":"2 John","3jn":"3 John","jd":"Jude","rv":"Revelation"
+  };
+
+  // ------------------ Bible JSON Parser Functions ------------------
+
+  /**
+   * Validates a Bible JSON structure and determines its format
+   * @param {*} data - The parsed JSON data to validate
+   * @returns {Object} - Validation result with success, format, and details
+   */
+  function validateBibleJSON(data) {
+    if (!data || typeof data !== "object") {
+      return {
+        success: false,
+        error: "Invalid JSON: Data is not an object or array",
+        suggestions: ["Ensure the file contains valid JSON data"]
+      };
+    }
+
+    // Format 1: KJV style with verses array
+    if (data.verses && Array.isArray(data.verses)) {
+      const sampleVerse = data.verses[0];
+      if (sampleVerse && (sampleVerse.book !== undefined || sampleVerse.Book !== undefined)) {
+        return {
+          success: true,
+          format: "KJV_VERSE_ARRAY",
+          bookCount: new Set(data.verses.map(v => v.book || v.Book)).size,
+          warnings: []
+        };
+      }
+    }
+
+    // Format 2: ASV style with resultset
+    if (data.resultset && data.resultset.row && Array.isArray(data.resultset.row)) {
+      const sampleRow = data.resultset.row[0];
+      if (sampleRow && sampleRow.field && Array.isArray(sampleRow.field) && sampleRow.field.length >= 5) {
+        return {
+          success: true,
+          format: "ASV_RESULTSET",
+          bookCount: new Set(data.resultset.row.map(r => r.field[1])).size,
+          warnings: []
+        };
+      }
+    }
+
+    // Format 3: BBE style - array of books with chapters
+    if (Array.isArray(data) && data.length > 0) {
+      const firstBook = data[0];
+      if (firstBook.chapters && Array.isArray(firstBook.chapters)) {
+        return {
+          success: true,
+          format: "BBE_CHAPTER_ARRAYS",
+          bookCount: data.length,
+          warnings: []
+        };
+      }
+      
+      // Format 6: Verse ID format
+      if (firstBook.verse_id !== undefined || firstBook.book_name !== undefined) {
+        return {
+          success: true,
+          format: "VERSE_ID_FORMAT",
+          bookCount: new Set(data.map(v => v.book_name)).size,
+          warnings: []
+        };
+      }
+    }
+
+    // Format 5: Simple book objects
+    if (data.books && Array.isArray(data.books)) {
+      const sampleBook = data.books[0];
+      if (sampleBook && sampleBook.name && sampleBook.verses && Array.isArray(sampleBook.verses)) {
+        return {
+          success: true,
+          format: "SIMPLE_BOOK_OBJECTS",
+          bookCount: data.books.length,
+          warnings: []
+        };
+      }
+    }
+
+    // Format 4: Already normalized - check if it has book names as keys
+    if (!Array.isArray(data)) {
+      const keys = Object.keys(data);
+      // Exclude metadata and other non-book keys
+      const bookKeys = keys.filter(k => k !== "metadata" && k !== "resultset" && k !== "verses" && k !== "books");
+      if (bookKeys.length > 0) {
+        const firstBook = data[bookKeys[0]];
+        if (firstBook && typeof firstBook === "object" && !Array.isArray(firstBook)) {
+          const chapters = Object.keys(firstBook);
+          if (chapters.length > 0) {
+            const firstChapter = firstBook[chapters[0]];
+            if (firstChapter && typeof firstChapter === "object") {
+              return {
+                success: true,
+                format: "NORMALIZED",
+                bookCount: bookKeys.length,
+                warnings: []
+              };
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      success: false,
+      error: "No recognizable Bible structure found",
+      suggestions: [
+        "Check if file contains 'verses', 'resultset', or book objects",
+        "Verify the JSON structure matches one of the supported formats",
+        "Ensure the file contains actual Bible data"
+      ]
+    };
+  }
+
+  /**
+   * Parses Format 1: KJV style with verses array
+   * @param {Object} data - The JSON data with verses array
+   * @returns {Object} - Normalized Bible data
+   */
+  function parseKJVFormat(data) {
+    const verses = data.verses;
+    const result = {};
+    
+    for (const v of verses) {
+      let book = v.book ?? v.Book ?? v.bookname ?? v.BookName ?? "Unknown";
+      if (!isNaN(book) && bookNumberMap[book]) {
+        book = bookNumberMap[book];
+      }
+      const ch = String(v.chapter ?? v.Chapter ?? 1);
+      const vs = String(v.verse ?? v.Verse ?? 1);
+      const txt = String(v.text ?? v.Text ?? v.content ?? "").trim();
+      
+      if (!result[book]) result[book] = {};
+      if (!result[book][ch]) result[book][ch] = {};
+      result[book][ch][vs] = txt;
+    }
+    
+    return result;
+  }
+
+  /**
+   * Parses Format 2: ASV style with resultset
+   * @param {Object} data - The JSON data with resultset
+   * @returns {Object} - Normalized Bible data
+   */
+  function parseASVFormat(data) {
+    const rows = data.resultset.row;
+    const result = {};
+    
+    for (const row of rows) {
+      const field = row.field;
+      // field format: [verseId, bookNum, chapter, verse, text]
+      const bookNum = field[1];
+      let book = bookNumberMap[bookNum] || "Unknown";
+      const ch = String(field[2]);
+      const vs = String(field[3]);
+      const txt = String(field[4] || "").trim();
+      
+      if (!result[book]) result[book] = {};
+      if (!result[book][ch]) result[book][ch] = {};
+      result[book][ch][vs] = txt;
+    }
+    
+    return result;
+  }
+
+  /**
+   * Parses Format 3: BBE style with chapter arrays
+   * @param {Array} data - The JSON array of books with chapters
+   * @returns {Object} - Normalized Bible data
+   */
+  function parseBBEFormat(data) {
+    const result = {};
+    
+    for (const bookObj of data) {
+      let bookName = bookObj.name || bookObj.Name;
+      
+      // If no name but has abbrev, try to map it
+      if (!bookName && bookObj.abbrev) {
+        bookName = bookAbbrevMap[bookObj.abbrev.toLowerCase()] || bookObj.abbrev;
+      }
+      
+      if (!bookName) continue;
+      
+      result[bookName] = {};
+      const chapters = bookObj.chapters || [];
+      
+      for (let chIdx = 0; chIdx < chapters.length; chIdx++) {
+        const chNum = String(chIdx + 1);
+        result[bookName][chNum] = {};
+        const verses = chapters[chIdx];
+        
+        if (Array.isArray(verses)) {
+          for (let vIdx = 0; vIdx < verses.length; vIdx++) {
+            const vNum = String(vIdx + 1);
+            result[bookName][chNum][vNum] = String(verses[vIdx] || "").trim();
+          }
+        }
+      }
+    }
+    
+    return result;
+  }
+
+  /**
+   * Parses Format 5: Simple book objects
+   * @param {Object} data - The JSON data with books array
+   * @returns {Object} - Normalized Bible data
+   */
+  function parseSimpleBookObjects(data) {
+    const books = data.books;
+    const result = {};
+    
+    for (const bookObj of books) {
+      const bookName = bookObj.name || bookObj.Name || "Unknown";
+      result[bookName] = {};
+      
+      const verses = bookObj.verses || [];
+      for (const v of verses) {
+        const ch = String(v.chapter ?? v.Chapter ?? 1);
+        const vs = String(v.verse ?? v.Verse ?? 1);
+        const txt = String(v.text ?? v.Text ?? v.content ?? "").trim();
+        
+        if (!result[bookName][ch]) result[bookName][ch] = {};
+        result[bookName][ch][vs] = txt;
+      }
+    }
+    
+    return result;
+  }
+
+  /**
+   * Parses Format 6: Verse ID format
+   * @param {Array} data - The JSON array of verses with verse_id
+   * @returns {Object} - Normalized Bible data
+   */
+  function parseVerseIDFormat(data) {
+    const result = {};
+    
+    for (const v of data) {
+      const bookName = v.book_name || v.bookName || v.book || "Unknown";
+      const txt = String(v.content ?? v.text ?? v.Text ?? "").trim();
+      
+      // Try to extract chapter and verse from verse_id (format: BBCCCVVV)
+      let ch, vs;
+      if (v.verse_id) {
+        const verseId = String(v.verse_id);
+        ch = String(parseInt(verseId.substring(2, 5)));
+        vs = String(parseInt(verseId.substring(5, 8)));
+      } else {
+        ch = String(v.chapter ?? v.Chapter ?? 1);
+        vs = String(v.verse ?? v.Verse ?? 1);
+      }
+      
+      if (!result[bookName]) result[bookName] = {};
+      if (!result[bookName][ch]) result[bookName][ch] = {};
+      result[bookName][ch][vs] = txt;
+    }
+    
+    return result;
+  }
+
+  /**
+   * Main parser that auto-detects format and normalizes Bible JSON
+   * @param {*} data - The raw parsed JSON data
+   * @returns {Object} - Normalized Bible data in format { BookName: { chapter: { verse: text } } }
+   */
+  function parseBibleJSON(data) {
+    // Validate first
+    const validation = validateBibleJSON(data);
+    
+    if (!validation.success) {
+      console.error("Bible JSON validation failed:", validation.error);
+      console.error("Suggestions:", validation.suggestions);
+      throw new Error(validation.error);
+    }
+    
+    console.log(`✓ Detected Bible format: ${validation.format}`);
+    console.log(`✓ Books found: ${validation.bookCount}`);
+    
+    // Parse based on detected format
+    switch (validation.format) {
+      case "KJV_VERSE_ARRAY":
+        return parseKJVFormat(data);
+      
+      case "ASV_RESULTSET":
+        return parseASVFormat(data);
+      
+      case "BBE_CHAPTER_ARRAYS":
+        return parseBBEFormat(data);
+      
+      case "SIMPLE_BOOK_OBJECTS":
+        return parseSimpleBookObjects(data);
+      
+      case "VERSE_ID_FORMAT":
+        return parseVerseIDFormat(data);
+      
+      case "NORMALIZED":
+        console.log("✓ Data is already normalized");
+        // Filter out non-book keys
+        const result = {};
+        for (const key of Object.keys(data)) {
+          if (key !== "metadata" && key !== "resultset" && key !== "verses" && key !== "books") {
+            result[key] = data[key];
+          }
+        }
+        return result;
+      
+      default:
+        // Fallback: try to parse as flat array
+        if (Array.isArray(data)) {
+          console.warn("⚠ Unknown format, attempting fallback parse as verse array");
+          const result = {};
+          for (const v of data) {
+            let book = v.book ?? v.Book ?? v.bookname ?? v.BookName ?? "Unknown";
+            if (!isNaN(book) && bookNumberMap[book]) {
+              book = bookNumberMap[book];
+            }
+            const ch = String(v.chapter ?? v.Chapter ?? 1);
+            const vs = String(v.verse ?? v.Verse ?? 1);
+            const txt = String(v.text ?? v.Text ?? v.content ?? "").trim();
+            
+            if (!result[book]) result[book] = {};
+            if (!result[book][ch]) result[book][ch] = {};
+            result[book][ch][vs] = txt;
+          }
+          return result;
+        }
+        
+        throw new Error("Unable to parse Bible JSON - unrecognized format");
+    }
+  }
+
   versionSelect.addEventListener("change", async () => {
     const path = versionSelect.value;
     if (!path) return;
+    
     try {
+      console.log(`Loading Bible from: ${path}`);
       const res = await fetch(path);
-      const data = await res.json();
-
-      // Some datasets wrap verses in { metadata, verses: [...] }
-      let verses = data;
-      if (data.verses && Array.isArray(data.verses)) verses = data.verses;
-
-      // Convert flat array → nested Book -> Chapter -> Verse
-      if (Array.isArray(verses)) {
-        bibleData = {};
-        for (const v of verses) {
-          let book = v.book ?? v.Book ?? "Unknown";
-          if (!isNaN(book) && bookNumberMap[book]) book = bookNumberMap[book];
-          const ch  = String(v.chapter ?? v.Chapter ?? 1);
-          const vs  = String(v.verse   ?? v.Verse   ?? 1);
-          const txt = String(v.text ?? v.Text ?? "").trim();
-          if (!bibleData[book])     bibleData[book]     = {};
-          if (!bibleData[book][ch]) bibleData[book][ch] = {};
-          bibleData[book][ch][vs] = txt;
-        }
-      } else {
-        bibleData = data; // already nested
+      
+      if (!res.ok) {
+        throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
       }
+      
+      const data = await res.json();
+      
+      // Use the new parser to normalize the data
+      bibleData = parseBibleJSON(data);
+      
       populateBooks();
+      console.log("✓ Bible loaded successfully");
     } catch (err) {
-      alert("Failed to load Bible version.");
-      console.error(err);
+      const errorMsg = err.message || "Failed to load Bible version.";
+      alert(`Error loading Bible: ${errorMsg}\n\nPlease check the console for details.`);
+      console.error("Bible loading error:", err);
     }
   });
 
