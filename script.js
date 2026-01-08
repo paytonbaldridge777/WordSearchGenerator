@@ -780,8 +780,8 @@
     const words     = parseWords(wordsInput.value);
     
     // Get and validate width and height
-    let width = parseInt(widthInput.value, 10);
-    let height = parseInt(heightInput.value, 10);
+    const width = parseInt(widthInput.value, 10);
+    const height = parseInt(heightInput.value, 10);
     
     if (isNaN(width) || width < 6 || width > 20) {
       messages.textContent = "Puzzle width must be between 6 and 20.";
