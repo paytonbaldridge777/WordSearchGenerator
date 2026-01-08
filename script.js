@@ -645,9 +645,8 @@
     const width = grid[0]?.length || 0;
     const titleH = opts.title ? 0.35 : 0;
     const verseReserve = 2.0; // reserve space below for verse and reference
-    const cellW = Math.min(innerW / width, (innerH - titleH - verseReserve) / height);
-    const cellH = cellW; // keep cells square
-    const gridW = cellW * width, gridH = cellH * height;
+    const cellSize = Math.min(innerW / width, (innerH - titleH - verseReserve) / height);
+    const gridW = cellSize * width, gridH = cellSize * height;
     const gridX = m.l + (innerW - gridW) / 2;
     const gridY = m.t + (titleH ? titleH + 0.15 : 0);
 
@@ -667,10 +666,10 @@
     doc.setDrawColor(gridColor.r, gridColor.g, gridColor.b);
     doc.rect(gridX, gridY, gridW, gridH);
     for (let i = 1; i < width; i++) {
-      doc.line(gridX + i * cellW, gridY, gridX + i * cellW, gridY + gridH);         // vertical
+      doc.line(gridX + i * cellSize, gridY, gridX + i * cellSize, gridY + gridH);         // vertical
     }
     for (let i = 1; i < height; i++) {
-      doc.line(gridX, gridY + i * cellH, gridX + gridW, gridY + i * cellH);         // horizontal
+      doc.line(gridX, gridY + i * cellSize, gridX + gridW, gridY + i * cellSize);         // horizontal
     }
 
     // Solution highlights
@@ -683,22 +682,22 @@
           const key = cc.r + "_" + cc.c;
           if (filled.has(key)) continue;
           filled.add(key);
-          const x = gridX + cc.c * cellW;
-          const y = gridY + cc.r * cellH;
-          doc.rect(x, y, cellW, cellH, "F"); // fill the cell (solid highlight)
+          const x = gridX + cc.c * cellSize;
+          const y = gridY + cc.r * cellSize;
+          doc.rect(x, y, cellSize, cellSize, "F"); // fill the cell (solid highlight)
         }
       }
     }
 
     // Letters
-    const fontPt = Math.max(8, Math.min(48, cellW * 72 * 0.66));
+    const fontPt = Math.max(8, Math.min(48, cellSize * 72 * 0.66));
     doc.setFont(opts.fontFamily || "helvetica", "bold");
     doc.setFontSize(fontPt);
     doc.setTextColor(letterColor.r, letterColor.g, letterColor.b);
     for (let r = 0; r < height; r++) {
       for (let c = 0; c < width; c++) {
-        const x = gridX + c * cellW + cellW / 2;
-        const y = gridY + r * cellH + cellH / 2 + (fontPt / 72) * 0.3;
+        const x = gridX + c * cellSize + cellSize / 2;
+        const y = gridY + r * cellSize + cellSize / 2 + (fontPt / 72) * 0.3;
         doc.text(grid[r][c], x, y, { align: "center" });
       }
     }
