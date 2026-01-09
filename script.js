@@ -24,6 +24,8 @@
   const verseInput = el("verse");
   const wordsInput = el("words");
   const refInput   = el("reference");
+  const widthInput = el("puzzleWidth");
+  const heightInput = el("puzzleHeight");
 
   const btnGenerate = el("btnGenerate");
   const btnExport   = el("btnExport");
@@ -548,10 +550,11 @@
   }
 
   function canPlace(grid, word, r, c, dx, dy) {
-    const N = grid.length;
+    const height = grid.length;
+    const width = grid[0]?.length || 0;
     const endR = r + dy * (word.length - 1);
     const endC = c + dx * (word.length - 1);
-    if (endR < 0 || endR >= N || endC < 0 || endC >= N) return false;
+    if (endR < 0 || endR >= height || endC < 0 || endC >= width) return false;
     for (let i = 0; i < word.length; i++) {
       const rr = r + dy * i, cc = c + dx * i;
       const existing = grid[rr][cc];
@@ -560,8 +563,8 @@
     return true;
   }
 
-  function generateGrid(words, N = 15) {
-    const grid   = Array.from({ length: N }, () => Array(N).fill(null));
+  function generateGrid(words, width = 14, height = 12) {
+    const grid   = Array.from({ length: height }, () => Array(width).fill(null));
     const placed = []; // { word, cells:[{r,c}] }
     const dirs = [
       {dx:1,dy:0},{dx:0,dy:1},{dx:1,dy:1},
@@ -570,12 +573,12 @@
     ];
 
     for (const w of words) {
-      if (w.length > N) continue;
+      if (w.length > Math.max(width, height)) continue;
       let done = false;
       for (let tries = 0; tries < 500 && !done; tries++) {
         const d = dirs[Math.floor(Math.random() * dirs.length)];
-        const r = Math.floor(Math.random() * N);
-        const c = Math.floor(Math.random() * N);
+        const r = Math.floor(Math.random() * height);
+        const c = Math.floor(Math.random() * width);
         if (!canPlace(grid, w, r, c, d.dx, d.dy)) continue;
         const cells = [];
         for (let i = 0; i < w.length; i++) {
@@ -589,8 +592,8 @@
     }
 
     const ALPH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    for (let r = 0; r < N; r++) {
-      for (let c = 0; c < N; c++) {
+    for (let r = 0; r < height; r++) {
+      for (let c = 0; c < width; c++) {
         if (!grid[r][c]) grid[r][c] = ALPH[Math.floor(Math.random() * ALPH.length)];
       }
     }
@@ -638,11 +641,12 @@
     const innerW = page.w - m.l - m.r;
     const innerH = page.h - m.t - m.b;
 
-    const N = grid.length;
+    const height = grid.length;
+    const width = grid[0]?.length || 0;
     const titleH = opts.title ? 0.35 : 0;
     const verseReserve = 2.0; // reserve space below for verse and reference
-    const cell = Math.min(innerW / N, (innerH - titleH - verseReserve) / N);
-    const gridW = cell * N, gridH = cell * N;
+    const cellSize = Math.min(innerW / width, (innerH - titleH - verseReserve) / height);
+    const gridW = cellSize * width, gridH = cellSize * height;
     const gridX = m.l + (innerW - gridW) / 2;
     const gridY = m.t + (titleH ? titleH + 0.15 : 0);
 
@@ -661,9 +665,11 @@
     doc.setLineWidth(0.015);
     doc.setDrawColor(gridColor.r, gridColor.g, gridColor.b);
     doc.rect(gridX, gridY, gridW, gridH);
-    for (let i = 1; i < N; i++) {
-      doc.line(gridX + i * cell, gridY, gridX + i * cell, gridY + gridH);         // vertical
-      doc.line(gridX, gridY + i * cell, gridX + gridW, gridY + i * cell);         // horizontal
+    for (let i = 1; i < width; i++) {
+      doc.line(gridX + i * cellSize, gridY, gridX + i * cellSize, gridY + gridH);         // vertical
+    }
+    for (let i = 1; i < height; i++) {
+      doc.line(gridX, gridY + i * cellSize, gridX + gridW, gridY + i * cellSize);         // horizontal
     }
 
     // Solution highlights
@@ -676,22 +682,22 @@
           const key = cc.r + "_" + cc.c;
           if (filled.has(key)) continue;
           filled.add(key);
-          const x = gridX + cc.c * cell;
-          const y = gridY + cc.r * cell;
-          doc.rect(x, y, cell, cell, "F"); // fill the cell (solid highlight)
+          const x = gridX + cc.c * cellSize;
+          const y = gridY + cc.r * cellSize;
+          doc.rect(x, y, cellSize, cellSize, "F"); // fill the cell (solid highlight)
         }
       }
     }
 
     // Letters
-    const fontPt = Math.max(8, Math.min(48, cell * 72 * 0.66));
+    const fontPt = Math.max(8, Math.min(48, cellSize * 72 * 0.66));
     doc.setFont(opts.fontFamily || "helvetica", "bold");
     doc.setFontSize(fontPt);
     doc.setTextColor(letterColor.r, letterColor.g, letterColor.b);
-    for (let r = 0; r < N; r++) {
-      for (let c = 0; c < N; c++) {
-        const x = gridX + c * cell + cell / 2;
-        const y = gridY + r * cell + cell / 2 + (fontPt / 72) * 0.3;
+    for (let r = 0; r < height; r++) {
+      for (let c = 0; c < width; c++) {
+        const x = gridX + c * cellSize + cellSize / 2;
+        const y = gridY + r * cellSize + cellSize / 2 + (fontPt / 72) * 0.3;
         doc.text(grid[r][c], x, y, { align: "center" });
       }
     }
@@ -772,11 +778,24 @@
     const verse     = verseInput.value.trim();
     const reference = refInput.value.trim();
     const words     = parseWords(wordsInput.value);
+    
+    // Get and validate width and height
+    const width = parseInt(widthInput.value, 10);
+    const height = parseInt(heightInput.value, 10);
+    
+    if (isNaN(width) || width < 6 || width > 20) {
+      messages.textContent = "Puzzle width must be between 6 and 20.";
+      return;
+    }
+    if (isNaN(height) || height < 6 || height > 20) {
+      messages.textContent = "Puzzle height must be between 6 and 20.";
+      return;
+    }
 
     if (!verse)       { messages.textContent = "Please paste or select a verse."; return; }
     if (!words.length){ messages.textContent = "Please provide at least one target word."; return; }
 
-    const { grid, placed } = generateGrid(words, 15);
+    const { grid, placed } = generateGrid(words, width, height);
     renderPreview(title, grid, verse, reference, words);
     messages.textContent = "Preview generated successfully.";
     btnExport.disabled = false;
