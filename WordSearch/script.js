@@ -274,7 +274,7 @@
     const cell=Math.min(innerW/N,(innerH-titleH-verseReserve)/N);
     const gridW=cell*N,gridH=cell*N,gridX=m.l+(innerW-gridW)/2,gridY=m.t+(titleH?titleH+0.15:0);
 
-    const font=opts.fontFamily,fontPt=clamp(cell*72*0.66,8,48),labelPt=12;
+    const font=opts.fontFamily,fontPt=clamp(cell*72*0.75,8,48),labelPt=12;
     const letterRGB=hexToRGB(opts.letterColor),gridRGB=hexToRGB(opts.gridColor),highlightRGB=hexToRGB(opts.circleColor);
 
     function drawTitle(doc){if(!title)return;doc.setFont(font,"bold");doc.setFontSize(16);doc.text(title,page.w/2,m.t+0.2,{align:"center"});}
