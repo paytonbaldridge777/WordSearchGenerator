@@ -705,7 +705,7 @@
     // Verse + reference
     let y = gridY + gridH + 1.5;
     doc.setFont(opts.fontFamily || "helvetica", "normal");
-    doc.setFontSize(16);
+    doc.setFontSize(18);
 
     // Bold + underline the first occurrence of each target word
     const used = new Set();
@@ -819,6 +819,7 @@
     lastState = null;
   });
 })();
+
 
 
 
