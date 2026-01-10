@@ -159,6 +159,57 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
+    #previewContainer { margin-top: 24px; text-align: center; }
+    #previewTitle { 
+      font-weight: bold; 
+      margin-bottom: 16px;
+      font-size: 1.2rem;
+    }
+    #previewGrid {
+      border-collapse: collapse; 
+      margin: 0 auto; 
+      user-select: none;
+    }
+    #previewGrid td {
+      width: 28px; 
+      height: 28px;
+      text-align: center; 
+      border: 1px solid #444; 
+      font-weight: bold;
+      font-size: 16px;
+      background: var(--bg-secondary);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    #previewVerse { 
+      margin-top: 16px; 
+      font-size: 1.5rem; 
+      text-align: center;
+      line-height: 1.7;
+    }
+    @media (max-width: 768px) {
+      #previewVerse {
+        font-size: 1.25rem;
+      }
+    }
+    @media (max-width: 480px) {
+      #previewVerse {
+        font-size: 1.1rem;
+      }
+    }
+    #previewReference { 
+      text-align: center; 
+      font-style: italic; 
+      font-size: 0.95rem; 
+      margin-top: 8px;
+      color: var(--text-secondary);
+    }
+    #messages { 
+      margin-top: 12px; 
+      color: #b33; 
+      font-weight: 600; 
+      text-align: center;
+      transition: color 0.3s ease;
+    }
 </head>
 <body>
   <div class="container">
@@ -205,9 +256,14 @@
     <button id="btnExport" class="secondary" disabled>Export PDFs</button>
     <button id="btnClear" class="secondary">Clear</button>
 
-    <div id="messages" style="margin-top:10px;color:#b33;font-weight:600;"></div>
+    <div id="messages"></div>
 
-    <div id="preview"></div>
+    <div id="previewContainer">
+      <div id="previewTitle"></div>
+      <table id="previewGrid"></table>
+      <div id="previewVerse"></div>
+      <div id="previewReference"></div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="script.js"></script>

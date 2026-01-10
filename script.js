@@ -690,7 +690,7 @@
     }
 
     // Letters
-    const fontPt = Math.max(8, Math.min(48, cellSize * 72 * 0.66));
+    const fontPt = Math.max(8, Math.min(48, cellSize * 72 * 0.75));
     doc.setFont(opts.fontFamily || "helvetica", "bold");
     doc.setFontSize(fontPt);
     doc.setTextColor(letterColor.r, letterColor.g, letterColor.b);
