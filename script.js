@@ -704,7 +704,7 @@
 
     // Verse + reference
     //let y = gridY + gridH + 0.35;
-    let y=page.h-m.b-1.5;const maxW=innerW; //move verse to bottom of page.
+    let y=page.h-m.b-1.5; //move verse to bottom of page.
     doc.setFont(opts.fontFamily || "helvetica", "normal");
     doc.setFontSize(16);
 
@@ -820,6 +820,7 @@
     lastState = null;
   });
 })();
+
 
 
 
