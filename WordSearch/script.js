@@ -306,7 +306,7 @@
     function drawVerseBlock(doc){
       const used=new Set();doc.setFontSize(labelPt);
       //let y=gridY+gridH+0.4;const maxW=innerW;
-	  let y=page.h-m.b-1. 5;const maxW=innerW; //move verse to bottom of page
+	  let y=page.h-m.b-1.5;const maxW=innerW; //move verse to bottom of page
       const wordsArr=verse.split(/\s+/);
       let line=[];let lineW=0;
       function flushLine(){
@@ -359,6 +359,7 @@
   btnExport.addEventListener("click",()=>{if(lastGrid&&lastOptions){exportPDFs(titleInput.value.trim(),lastGrid,lastPlaced,lastVerse,lastReference,lastWords,lastOptions);}});
   btnClear.addEventListener("click",()=>{titleInput.value=verseInput.value=wordsInput.value=refInput.value="";previewTitle.textContent=previewGrid.innerHTML=previewVerse.innerHTML=previewRef.textContent=messages.textContent="";btnExport.disabled=true;lastGrid=null;});
 })();
+
 
 
 
