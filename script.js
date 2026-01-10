@@ -637,7 +637,7 @@
   // Draw a real grid with centered letters; optionally highlight solution cells
   function drawPDFGrid(doc, grid, placed, opts, withHighlights) {
     const page = { w: 8.5, h: 11 };
-    const m    = { l: 0.5, r: 0.5, t: 0.75, b: 0.75 };
+    const m    = { l: 0.75, r: 0.75, t: 0.8, b: 0.8 };
     const innerW = page.w - m.l - m.r;
     const innerH = page.h - m.t - m.b;
 
@@ -703,7 +703,8 @@
     }
 
     // Verse + reference
-    let y = gridY + gridH + 0.35;
+    //let y = gridY + gridH + 0.35;
+    let y=page.h-m.b-1. 5;const maxW=innerW; //move verse to bottom of page
     doc.setFont(opts.fontFamily || "helvetica", "normal");
     doc.setFontSize(16);
 
@@ -819,6 +820,7 @@
     lastState = null;
   });
 })();
+
 
 
 
