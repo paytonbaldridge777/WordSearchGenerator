@@ -717,7 +717,8 @@
       if (!line.length) return;
       let cursorX = page.w / 2 - (lineW / 2);
       for (const seg of line) {
-        doc.setFont(opts.fontFamily || "helvetica", seg.bold ? "bold" : "normal");
+        doc.setFont(opts.fontFamily || "helvetica", seg. bold ? "bold" : "normal");
+        doc.setFontSize(18);  // ADD THIS LINE - set size after setFont()
         doc.text(seg.text, cursorX, y, { baseline: "alphabetic" });
         if (seg.bold) {
           doc.setLineWidth(0.015);
@@ -741,6 +742,7 @@
 
     if (opts.reference) {
       doc.setFont(opts.fontFamily || "helvetica", "italic");
+      doc.setFontSize(18);
       doc.text(opts.reference, page.w / 2, y + 0.3, { align: "center" });
     }
   }
@@ -819,6 +821,7 @@
     lastState = null;
   });
 })();
+
 
 
 
