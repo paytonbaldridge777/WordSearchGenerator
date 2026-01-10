@@ -665,12 +665,12 @@
     doc.setLineWidth(0.015);
     doc.setDrawColor(gridColor.r, gridColor.g, gridColor.b);
     doc.rect(gridX, gridY, gridW, gridH);
-    for (let i = 1; i < width; i++) {
-      doc.line(gridX + i * cellSize, gridY, gridX + i * cellSize, gridY + gridH);         // vertical
-    }
-    for (let i = 1; i < height; i++) {
-      doc.line(gridX, gridY + i * cellSize, gridX + gridW, gridY + i * cellSize);         // horizontal
-    }
+    //for (let i = 1; i < width; i++) {
+     // doc.line(gridX + i * cellSize, gridY, gridX + i * cellSize, gridY + gridH);         // vertical
+    //}
+    //for (let i = 1; i < height; i++) {
+    //  doc.line(gridX, gridY + i * cellSize, gridX + gridW, gridY + i * cellSize);         // horizontal
+    //}
 
     // Solution highlights
     if (withHighlights && placed?.length) {
@@ -819,6 +819,7 @@
     lastState = null;
   });
 })();
+
 
 
 
