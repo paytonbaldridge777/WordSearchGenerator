@@ -271,7 +271,7 @@
 
     const page={w:8.5,h:11},m={l:0.5,r:0.5,t:0.6,b:0.6},innerW=page.w-m.l-m.r,innerH=page.h-m.t-m.b;
     const N=grid.length,titleH=title?0.35:0,verseReserve=2.0;
-    const cell = Math.min(innerW / N, (innerH - titleH - verseReserve) / N) * 0.85;
+    const cell = Math.min(innerW / N, (innerH - titleH - verseReserve) / N) * 0.50;
     const gridW=cell*N,gridH=cell*N,gridX=m.l+(innerW-gridW)/2,gridY=m.t+(titleH?titleH+0.15:0);
 
     const font=opts.fontFamily,fontPt=clamp(cell*72*0.66,8,48),labelPt=16;
@@ -358,4 +358,5 @@
   btnExport.addEventListener("click",()=>{if(lastGrid&&lastOptions){exportPDFs(titleInput.value.trim(),lastGrid,lastPlaced,lastVerse,lastReference,lastWords,lastOptions);}});
   btnClear.addEventListener("click",()=>{titleInput.value=verseInput.value=wordsInput.value=refInput.value="";previewTitle.textContent=previewGrid.innerHTML=previewVerse.innerHTML=previewRef.textContent=messages.textContent="";btnExport.disabled=true;lastGrid=null;});
 })();
+
 
