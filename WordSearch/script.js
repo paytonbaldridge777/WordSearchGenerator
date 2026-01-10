@@ -269,7 +269,7 @@
     const docPuzzle=new jsPDF({unit:"in",format:"letter"});
     const docSolution=new jsPDF({unit:"in",format:"letter"});
 
-    const page={w:8.5,h:11},m={l:0.5,r:0.5,t:0.6,b:0.6},innerW=page.w-m.l-m.r,innerH=page.h-m.t-m.b;
+    const page={w:8.5,h:11},m={l:0.75,r:0.75,t:0.8,b:0.8},innerW=page.w-m.l-m.r,innerH=page.h-m.t-m.b;
     const N=grid.length,titleH=title?0.35:0,verseReserve=2.0;
     const cell = Math.min(innerW / N, (innerH - titleH - verseReserve) / N) * 0.75;
     const gridW=cell*N,gridH=cell*N,gridX=m.l+(innerW-gridW)/2,gridY=m.t+(titleH?titleH+0.15:0);
@@ -305,7 +305,8 @@
 
     function drawVerseBlock(doc){
       const used=new Set();doc.setFontSize(labelPt);
-      let y=gridY+gridH+0.4;const maxW=innerW;
+      //let y=gridY+gridH+0.4;const maxW=innerW;
+	  let y=page.h-m.b-1. 5;const maxW=innerW; //move verse to bottom of page
       const wordsArr=verse.split(/\s+/);
       let line=[];let lineW=0;
       function flushLine(){
@@ -358,6 +359,7 @@
   btnExport.addEventListener("click",()=>{if(lastGrid&&lastOptions){exportPDFs(titleInput.value.trim(),lastGrid,lastPlaced,lastVerse,lastReference,lastWords,lastOptions);}});
   btnClear.addEventListener("click",()=>{titleInput.value=verseInput.value=wordsInput.value=refInput.value="";previewTitle.textContent=previewGrid.innerHTML=previewVerse.innerHTML=previewRef.textContent=messages.textContent="";btnExport.disabled=true;lastGrid=null;});
 })();
+
 
 
 
