@@ -645,7 +645,7 @@
     const width = grid[0]?.length || 0;
     const titleH = opts.title ? 0.35 : 0;
     const verseReserve = 2.0; // reserve space below for verse and reference
-    const cellSize = Math.min(innerW / width, (innerH - titleH - verseReserve) / height) * 0.85;
+    const cellSize = Math.min(innerW / width, (innerH - titleH - verseReserve) / height) * 0.50;
     const gridW = cellSize * width, gridH = cellSize * height;
     const gridX = m.l + (innerW - gridW) / 2;
     const gridY = m.t + (titleH ? titleH + 0.15 : 0);
@@ -819,4 +819,5 @@
     lastState = null;
   });
 })();
+
 
