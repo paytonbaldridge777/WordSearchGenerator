@@ -690,7 +690,7 @@
     }
 
     // Letters
-    const fontPt = Math.max(8, Math.min(48, cellSize * 72 * 0.75));
+    const fontPt = Math.max(8, Math.min(48, cellSize * 72 * 0.66));
     doc.setFont(opts.fontFamily || "helvetica", "bold");
     doc.setFontSize(fontPt);
     doc.setTextColor(letterColor.r, letterColor.g, letterColor.b);
@@ -705,7 +705,7 @@
     // Verse + reference
     let y = gridY + gridH + 0.35;
     doc.setFont(opts.fontFamily || "helvetica", "normal");
-    doc.setFontSize(12);
+    doc.setFontSize(16);
 
     // Bold + underline the first occurrence of each target word
     const used = new Set();
