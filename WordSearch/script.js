@@ -274,7 +274,7 @@
     const cell = Math.min(innerW / N, (innerH - titleH - verseReserve) / N) * 0.75;
     const gridW=cell*N,gridH=cell*N,gridX=m.l+(innerW-gridW)/2,gridY=m.t+(titleH?titleH+0.15:0);
 
-    const font=opts.fontFamily,fontPt=clamp(cell*72*0.66,8,48),labelPt=16;
+    const font=opts.fontFamily,fontPt=clamp(cell*72*0.66,8,48),labelPt=18;
     const letterRGB=hexToRGB(opts.letterColor),gridRGB=hexToRGB(opts.gridColor),highlightRGB=hexToRGB(opts.circleColor);
 
     function drawTitle(doc){if(!title)return;doc.setFont(font,"bold");doc.setFontSize(16);doc.text(title,page.w/2,m.t+0.2,{align:"center"});}
@@ -358,6 +358,7 @@
   btnExport.addEventListener("click",()=>{if(lastGrid&&lastOptions){exportPDFs(titleInput.value.trim(),lastGrid,lastPlaced,lastVerse,lastReference,lastWords,lastOptions);}});
   btnClear.addEventListener("click",()=>{titleInput.value=verseInput.value=wordsInput.value=refInput.value="";previewTitle.textContent=previewGrid.innerHTML=previewVerse.innerHTML=previewRef.textContent=messages.textContent="";btnExport.disabled=true;lastGrid=null;});
 })();
+
 
 
 
