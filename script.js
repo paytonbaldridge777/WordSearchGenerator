@@ -24,8 +24,7 @@
   const verseInput = el("verse");
   const wordsInput = el("words");
   const refInput   = el("reference");
-  const widthInput = el("puzzleWidth");
-  const heightInput = el("puzzleHeight");
+  const sizeInput = el("puzzleSize");
 
   const btnGenerate = el("btnGenerate");
   const btnExport   = el("btnExport");
@@ -797,23 +796,18 @@
     const reference = refInput.value.trim();
     const words     = parseWords(wordsInput.value);
     
-    // Get and validate width and height
-    const width = parseInt(widthInput.value, 10);
-    const height = parseInt(heightInput.value, 10);
+    // Get and validate size
+    const size = parseInt(sizeInput.value, 10);
     
-    if (isNaN(width) || width < 6 || width > 20) {
-      messages.textContent = "Puzzle width must be between 6 and 20.";
-      return;
-    }
-    if (isNaN(height) || height < 6 || height > 20) {
-      messages.textContent = "Puzzle height must be between 6 and 20.";
+    if (isNaN(size) || size < 6 || size > 20) {
+      messages.textContent = "Puzzle size must be between 6 and 20.";
       return;
     }
 
     if (!verse)       { messages.textContent = "Please paste or select a verse."; return; }
     if (!words.length){ messages.textContent = "Please provide at least one target word."; return; }
 
-    const { grid, placed } = generateGrid(words, width, height);
+    const { grid, placed } = generateGrid(words, size, size);
     renderPreview(title, grid, verse, reference, words);
     messages.textContent = "Preview generated successfully.";
     btnExport.disabled = false;
