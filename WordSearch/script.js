@@ -269,7 +269,7 @@
     const docPuzzle=new jsPDF({unit:"in",format:"letter"});
     const docSolution=new jsPDF({unit:"in",format:"letter"});
 
-    const page={w:8.5,h:11},m={l:0.75,r:0.75,t:0.8,b:0.8},innerW=page.w-m.l-m.r,innerH=page.h-m.t-m.b;
+    const page={w:8.5,h:11},m={l:0.6,r:0.6,t:0.6,b:0.6},innerW=page.w-m.l-m.r,innerH=page.h-m.t-m.b;
     const N=grid.length,titleH=title?0.35:0,verseReserve=2.0;
     const cell = Math.min(innerW / N, (innerH - titleH - verseReserve) / N) * 0.75;
     const gridW=cell*N,gridH=cell*N,gridX=m.l+(innerW-gridW)/2,gridY=m.t+(titleH?titleH+0.15:0);
@@ -277,27 +277,48 @@
     const font=opts.fontFamily,fontPt=clamp(cell*72*0.66,8,48),labelPt=18;
     const letterRGB=hexToRGB(opts.letterColor),gridRGB=hexToRGB(opts.gridColor),highlightRGB=hexToRGB(opts.circleColor);
 
-    function drawTitle(doc){if(!title)return;doc.setFont(font,"bold");doc.setFontSize(16);doc.text(title,page.w/2,m.t+0.2,{align:"center"});}
+    function drawTitle(doc){if(!title)return;doc.setFont(font,"bold");doc.setFontSize(22);doc.text(title,page.w/2,m.t+0.2,{align:"center"});}
     function drawGrid(doc,highlight=false){
       doc.setLineWidth(0.015);
       doc.setDrawColor(gridRGB.r,gridRGB.g,gridRGB.b);
       doc.rect(gridX,gridY,gridW,gridH);
       for(let i=1;i<N;i++){doc.line(gridX+i*cell,gridY,gridX+i*cell,gridY+gridH);doc.line(gridX,gridY+i*cell,gridX+gridW,gridY+i*cell);}
-      doc.setFont(font,"bold");
-      doc.setFontSize(fontPt);
-      doc.setTextColor(letterRGB.r,letterRGB.g,letterRGB.b);
+      
+      // Build a set of answer cell coordinates for quick lookup
+      const answerCells = new Set();
+      if (highlight && placed?.length) {
+        for (const p of placed) {
+          for (const cc of p.cells) {
+            answerCells.add(cc.r + "_" + cc.c);
+          }
+        }
+      }
+      
       for(let r=0;r<N;r++){
         for(let c=0;c<N;c++){
           const x=gridX+c*cell+cell/2;
           const y=gridY+r*cell+cell/2+(fontPt/72)*0.3;
-          if(highlight){
-            // Check if this cell is part of any placed word
-            const inWord = placed.some(p => p.cells.some(cc => cc.r===r && cc.c===c));
-            if(inWord){
-              doc.setFillColor(highlightRGB.r,highlightRGB.g,highlightRGB.b);
-              doc.rect(gridX+c*cell,gridY+r*cell,cell,cell,"F");
+          const key = r + "_" + c;
+          const isAnswer = answerCells.has(key);
+          
+          if (highlight) {
+            // For solution page: bold answer letters, grey non-answer letters
+            if (isAnswer) {
+              doc.setFont(font,"bold");
+              doc.setFontSize(fontPt);
+              doc.setTextColor(letterRGB.r,letterRGB.g,letterRGB.b); // Black
+            } else {
+              doc.setFont(font,"normal");
+              doc.setFontSize(fontPt);
+              doc.setTextColor(180, 180, 180); // Light grey
             }
+          } else {
+            // For puzzle page: all letters black and bold
+            doc.setFont(font,"bold");
+            doc.setFontSize(fontPt);
+            doc.setTextColor(letterRGB.r,letterRGB.g,letterRGB.b);
           }
+          
           doc.text(grid[r][c],x,y,{align:"center"});
         }
       }
@@ -310,7 +331,7 @@
       let line=[];let lineW=0;
       function flushLine(){
         if(!line.length)return;
-        let cursorX=page.w/2-(lineW/2);
+        let cursorX=m.l;  // Start at left margin instead of center
         for(const seg of line){
           doc.setFont(font,seg.bold?"bold":"normal");
           doc.text(seg.text,cursorX,y,{baseline:"alphabetic"});
@@ -332,11 +353,12 @@
         line.push({text:raw,bold});lineW+=w;
       }
       flushLine();
-      if(reference){doc.setFont(font,"italic");doc.text(reference,page.w/2,y+0.3,{align:"center"});}
+      if(reference){doc.setFont(font,"italic");doc.text(reference,m.l,y+0.3,{align:"left"});}
     }
 
     drawTitle(docPuzzle);drawGrid(docPuzzle,false);drawVerseBlock(docPuzzle);
-    drawTitle(docSolution);drawGrid(docSolution,true);drawVerseBlock(docSolution);
+    drawTitle(docSolution);drawGrid(docSolution,true);
+    // Don't draw verse block on solution page
 
     const base=sanitizeFileName(title,`WordSearch_${N}x${N}`);
     docPuzzle.save(`${base}_Puzzle.pdf`);
