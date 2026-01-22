@@ -732,7 +732,7 @@
         if (!line.length) return;
         let cursorX = m.l;  // Start at left margin instead of center
         for (const seg of line) {
-          doc.setFont(opts.fontFamily || "helvetica", seg. bold ? "bold" : "normal");
+          doc.setFont(opts.fontFamily || "helvetica", seg.bold ? "bold" : "normal");
           doc.setFontSize(18);  // ADD THIS LINE - set size after setFont()
           doc.text(seg.text, cursorX, y, { baseline: "alphabetic" });
           if (seg.bold) {
