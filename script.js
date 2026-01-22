@@ -635,9 +635,9 @@
   }
 
   // Draw a real grid with centered letters; optionally highlight solution cells
-  function drawPDFGrid(doc, grid, placed, opts, withHighlights) {
+  function drawPDFGrid(doc, grid, placed, opts, withHighlights, showVerse = true) {
     const page = { w: 8.5, h: 11 };
-    const m    = { l: 0.75, r: 0.75, t: 0.8, b: 0.8 };
+    const m    = { l: 0.6, r: 0.6, t: 0.6, b: 0.6 };
     const innerW = page.w - m.l - m.r;
     const innerH = page.h - m.t - m.b;
 
@@ -657,7 +657,7 @@
     // Title
     if (opts.title) {
       doc.setFont(opts.fontFamily || "helvetica", "bold");
-      doc.setFontSize(16);
+      doc.setFontSize(22);
       doc.text(opts.title, page.w / 2, m.t + 0.2, { align: "center" });
     }
 
@@ -672,78 +672,94 @@
     //  doc.line(gridX, gridY + i * cellSize, gridX + gridW, gridY + i * cellSize);         // horizontal
     //}
 
-    // Solution highlights
-    if (withHighlights && placed?.length) {
-      doc.setDrawColor(hiColor.r, hiColor.g, hiColor.b);
-      doc.setFillColor(hiColor.r, hiColor.g, hiColor.b);
-      const filled = new Set();
-      for (const p of placed) {
-        for (const cc of p.cells) {
-          const key = cc.r + "_" + cc.c;
-          if (filled.has(key)) continue;
-          filled.add(key);
-          const x = gridX + cc.c * cellSize;
-          const y = gridY + cc.r * cellSize;
-          doc.rect(x, y, cellSize, cellSize, "F"); // fill the cell (solid highlight)
-        }
-      }
-    }
+    // Solution highlights - removed cell background fill
 
     // Letters
     const fontPt = Math.max(8, Math.min(48, cellSize * 72 * 0.66));
-    doc.setFont(opts.fontFamily || "helvetica", "bold");
-    doc.setFontSize(fontPt);
-    doc.setTextColor(letterColor.r, letterColor.g, letterColor.b);
+    
+    // Build a set of answer cell coordinates for quick lookup
+    const answerCells = new Set();
+    if (withHighlights && placed?.length) {
+      for (const p of placed) {
+        for (const cc of p.cells) {
+          answerCells.add(cc.r + "_" + cc.c);
+        }
+      }
+    }
+    
     for (let r = 0; r < height; r++) {
       for (let c = 0; c < width; c++) {
         const x = gridX + c * cellSize + cellSize / 2;
         const y = gridY + r * cellSize + cellSize / 2 + (fontPt / 72) * 0.3;
+        const key = r + "_" + c;
+        const isAnswer = answerCells.has(key);
+        
+        if (withHighlights) {
+          // For solution page: bold answer letters, grey non-answer letters
+          if (isAnswer) {
+            doc.setFont(opts.fontFamily || "helvetica", "bold");
+            doc.setFontSize(fontPt);
+            doc.setTextColor(letterColor.r, letterColor.g, letterColor.b); // Black
+          } else {
+            doc.setFont(opts.fontFamily || "helvetica", "normal");
+            doc.setFontSize(fontPt);
+            doc.setTextColor(180, 180, 180); // Light grey
+          }
+        } else {
+          // For puzzle page: all letters black and bold
+          doc.setFont(opts.fontFamily || "helvetica", "bold");
+          doc.setFontSize(fontPt);
+          doc.setTextColor(letterColor.r, letterColor.g, letterColor.b);
+        }
+        
         doc.text(grid[r][c], x, y, { align: "center" });
       }
     }
 
-    // Verse + reference
-    let y = gridY + gridH + 1.5;
-    doc.setFont(opts.fontFamily || "helvetica", "normal");
-    doc.setFontSize(18);
-
-    // Bold + underline the first occurrence of each target word
-    const used = new Set();
-    const tokens = (opts.verse || "").split(/\s+/);
-    let line = [], lineW = 0;
-    const maxW = innerW;
-
-    function flushLine() {
-      if (!line.length) return;
-      let cursorX = page.w / 2 - (lineW / 2);
-      for (const seg of line) {
-        doc.setFont(opts.fontFamily || "helvetica", seg. bold ? "bold" : "normal");
-        doc.setFontSize(18);  // ADD THIS LINE - set size after setFont()
-        doc.text(seg.text, cursorX, y, { baseline: "alphabetic" });
-        if (seg.bold) {
-          doc.setLineWidth(0.015);
-          doc.line(cursorX, y + 0.03, cursorX + doc.getTextWidth(seg.text), y + 0.03);
-        }
-        cursorX += doc.getTextWidth(seg.text + " ");
-      }
-      y += 0.25; line = []; lineW = 0;
-    }
-
-    for (const raw of tokens) {
-      const up = raw.toUpperCase().replace(/[^A-Z]/g, "");
-      const bold = opts.words?.includes(up) && !used.has(up);
-      if (bold) used.add(up);
-      const w = doc.getTextWidth(raw + " ");
-      if (lineW + w > maxW) flushLine();
-      line.push({ text: raw, bold });
-      lineW += w;
-    }
-    flushLine();
-
-    if (opts.reference) {
-      doc.setFont(opts.fontFamily || "helvetica", "italic");
+    // Verse + reference (only show on puzzle page, not solution page)
+    if (showVerse) {
+      let y = gridY + gridH + 1.5;
+      doc.setFont(opts.fontFamily || "helvetica", "normal");
       doc.setFontSize(18);
-      doc.text(opts.reference, page.w / 2, y + 0.3, { align: "center" });
+
+      // Bold + underline the first occurrence of each target word
+      const used = new Set();
+      const tokens = (opts.verse || "").split(/\s+/);
+      let line = [], lineW = 0;
+      const maxW = innerW;
+
+      function flushLine() {
+        if (!line.length) return;
+        let cursorX = m.l;  // Start at left margin instead of center
+        for (const seg of line) {
+          doc.setFont(opts.fontFamily || "helvetica", seg. bold ? "bold" : "normal");
+          doc.setFontSize(18);  // ADD THIS LINE - set size after setFont()
+          doc.text(seg.text, cursorX, y, { baseline: "alphabetic" });
+          if (seg.bold) {
+            doc.setLineWidth(0.015);
+            doc.line(cursorX, y + 0.03, cursorX + doc.getTextWidth(seg.text), y + 0.03);
+          }
+          cursorX += doc.getTextWidth(seg.text + " ");
+        }
+        y += 0.25; line = []; lineW = 0;
+      }
+
+      for (const raw of tokens) {
+        const up = raw.toUpperCase().replace(/[^A-Z]/g, "");
+        const bold = opts.words?.includes(up) && !used.has(up);
+        if (bold) used.add(up);
+        const w = doc.getTextWidth(raw + " ");
+        if (lineW + w > maxW) flushLine();
+        line.push({ text: raw, bold });
+        lineW += w;
+      }
+      flushLine();
+
+      if (opts.reference) {
+        doc.setFont(opts.fontFamily || "helvetica", "italic");
+        doc.setFontSize(18);
+        doc.text(opts.reference, m.l, y + 0.3, { align: "left" });
+      }
     }
   }
 
@@ -761,11 +777,11 @@
 
     // Puzzle
     const docPuzzle = new jsPDF({ unit: "in", format: "letter" });
-    drawPDFGrid(docPuzzle, grid, placed, opts, false);
+    drawPDFGrid(docPuzzle, grid, placed, opts, false, true);  // Show verse on puzzle page
 
     // Solution
     const docSolution = new jsPDF({ unit: "in", format: "letter" });
-    drawPDFGrid(docSolution, grid, placed, opts, true);
+    drawPDFGrid(docSolution, grid, placed, opts, true, false);  // Don't show verse on solution page
 
     const base = (title || "WordSearch").trim().replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, "_");
     docPuzzle.save(`${base}_Puzzle.pdf`);
