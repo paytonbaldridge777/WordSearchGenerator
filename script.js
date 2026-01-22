@@ -703,7 +703,7 @@
           } else {
             doc.setFont(opts.fontFamily || "helvetica", "normal");
             doc.setFontSize(fontPt);
-            doc.setTextColor(180, 180, 180); // Light grey
+            doc.setTextColor(220, 220, 220); // Light grey
           }
         } else {
           // For puzzle page: all letters black and bold
@@ -741,7 +741,7 @@
           }
           cursorX += doc.getTextWidth(seg.text + " ");
         }
-        y += 0.25; line = []; lineW = 0;
+        y += 1.2; line = []; lineW = 0;
       }
 
       for (const raw of tokens) {
