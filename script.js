@@ -25,6 +25,7 @@
   const wordsInput = el("words");
   const refInput   = el("reference");
   const sizeInput = el("puzzleSize");
+  const lineSpacingInput = el("lineSpacing");
 
   const btnGenerate = el("btnGenerate");
   const btnExport   = el("btnExport");
@@ -600,7 +601,7 @@
   }
 
   // ------------------ Preview ------------------
-  function renderPreview(title, grid, verse, reference, words) {
+  function renderPreview(title, grid, verse, reference, words, lineSpacing) {
     previewTitle.textContent = title || "Word Search";
     previewGrid.innerHTML = "";
     for (let r = 0; r < grid.length; r++) {
@@ -623,6 +624,12 @@
       }
       return tok;
     }).join("");
+
+    // Apply dynamic line spacing to preview verse
+    // Convert PDF spacing (inches) to a line-height multiplier
+    // 0.3 inches ≈ 1.7 line-height is a reasonable conversion
+    const lineHeight = 1 + (lineSpacing * 2.33); // scaling factor
+    previewVerse.style.lineHeight = lineHeight.toString();
 
     previewRef.textContent = reference || "";
   }
@@ -740,7 +747,7 @@
           }
           cursorX += doc.getTextWidth(seg.text + " ");
         }
-        y += 1.2; line = []; lineW = 0;
+        y += (opts.lineSpacing || 0.3) * 4; line = []; lineW = 0;
       }
 
       for (const raw of tokens) {
@@ -764,14 +771,15 @@
 
   function exportPDFs(state) {
     const { jsPDF } = window.jspdf;
-    const { title, grid, placed, verse, reference, words } = state;
+    const { title, grid, placed, verse, reference, words, lineSpacing } = state;
 
     const opts = {
       title,
       verse,
       reference,
       words,
-      fontFamily: "helvetica"
+      fontFamily: "helvetica",
+      lineSpacing: lineSpacing || 0.3
     };
 
     // Puzzle
@@ -804,15 +812,18 @@
       return;
     }
 
+    // Get line spacing
+    const lineSpacing = parseFloat(lineSpacingInput.value) || 0.3;
+
     if (!verse)       { messages.textContent = "Please paste or select a verse."; return; }
     if (!words.length){ messages.textContent = "Please provide at least one target word."; return; }
 
     const { grid, placed } = generateGrid(words, size, size);
-    renderPreview(title, grid, verse, reference, words);
+    renderPreview(title, grid, verse, reference, words, lineSpacing);
     messages.textContent = "Preview generated successfully.";
     btnExport.disabled = false;
 
-    lastState = { title, grid, placed, verse, reference, words };
+    lastState = { title, grid, placed, verse, reference, words, lineSpacing };
   });
 
   btnExport.addEventListener("click", () => {

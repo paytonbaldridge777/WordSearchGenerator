@@ -28,6 +28,7 @@
   const verseInput = el("verse");
   const wordsInput = el("words");
   const refInput = el("reference");
+  const lineSpacingInput = el("lineSpacing");
 
   const gridSizeSel = el("gridSize");
   const fontFamilySel = el("fontFamily");
@@ -258,6 +259,10 @@
       previewGrid.appendChild(tr);
     }
     previewVerse.innerHTML=highlightVerseHTML(verse,words);
+    // Apply dynamic line spacing to preview verse
+    // Convert PDF spacing (inches) to a line-height multiplier
+    const lineHeight = 1 + ((opts.lineSpacing || 0.3) * 2.33);
+    previewVerse.style.lineHeight = lineHeight.toString();
     previewRef.textContent=ref;
   }
 
@@ -341,7 +346,7 @@
           }
           cursorX+=doc.getTextWidth(seg.text+" ");
         }
-        y+=1.2;line=[];lineW=0;
+        y+=(opts.lineSpacing || 0.3) * 4;line=[];lineW=0;
       }
       for(const raw of wordsArr){
         let up=raw.toUpperCase().replace(/[^A-Z]/g,"");
@@ -370,7 +375,8 @@
     const title=titleInput.value.trim(),verse=cleanAndFormatVerse(verseInput.value),words=parseWords(wordsInput.value),reference=refInput.value.trim();
     if(!verse){messages.textContent="Please paste a verse.";return;}
     if(!words.length){messages.textContent="Please provide at least one target word.";return;}
-    const opts={size:+gridSizeSel.value,allowH:allowH.checked,allowV:allowV.checked,allowD:allowD.checked,allowBack:allowBack.checked,fontFamily:fontFamilySel.value,letterColor:letterColorInp.value,gridColor:gridColorInp.value,circleColor:highlightColorInp.value};
+    const lineSpacing = lineSpacingInput ? parseFloat(lineSpacingInput.value) || 0.3 : 0.3;
+    const opts={size:gridSizeSel?+gridSizeSel.value:14,allowH:allowH?allowH.checked:true,allowV:allowV?allowV.checked:true,allowD:allowD?allowD.checked:true,allowBack:allowBack?allowBack.checked:false,fontFamily:fontFamilySel?fontFamilySel.value:"helvetica",letterColor:letterColorInp?letterColorInp.value:"#000000",gridColor:gridColorInp?gridColorInp.value:"#000000",circleColor:highlightColorInp?highlightColorInp.value:"#e6c200",lineSpacing:lineSpacing};
     const {grid,placed}=generateGrid(words,opts);
     lastGrid=grid;lastPlaced=placed;lastWords=words;lastOptions=opts;lastVerse=verse;lastReference=reference;
     renderPreview(title,grid,verse,reference,words,opts);
