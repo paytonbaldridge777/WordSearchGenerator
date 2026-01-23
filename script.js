@@ -724,7 +724,7 @@
 
     // Verse + reference (only show on puzzle page, not solution page)
     if (showVerse) {
-      let y = gridY + gridH + 1.5;
+      let y = gridY + gridH + .75;
       doc.setFont(opts.fontFamily || "helvetica", "normal");
       doc.setFontSize(18);
 
@@ -842,6 +842,7 @@
     lastState = null;
   });
 })();
+
 
 
 
