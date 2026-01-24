@@ -30,7 +30,10 @@
   const verseFontSizeInput = el("verseFontSize");
   const puzzleLetterFontSizeInput = el("puzzleLetterFontSize");
   const puzzleVerseSpacingInput = el("puzzleVerseSpacing");
-  const pageMarginsInput = el("pageMargins");
+  const marginTopInput = el("marginTop");
+  const marginLeftInput = el("marginLeft");
+  const marginRightInput = el("marginRight");
+  const marginBottomInput = el("marginBottom");
 
   const btnGenerate = el("btnGenerate");
   const btnExport   = el("btnExport");
@@ -648,10 +651,9 @@
   // Draw a real grid with centered letters; optionally highlight solution cells
   function drawPDFGrid(doc, grid, placed, opts, withHighlights, showVerse = true) {
     const page = { w: 8.5, h: 11 };
-    const margin = opts.pageMargins || 0.6;
-    const m    = { l: margin, r: margin, t: margin, b: margin };
-    const innerW = page.w - m.l - m.r;
-    const innerH = page.h - m.t - m.b;
+    const m = opts.margins || { top: 0.6, left: 0.6, right: 0.6, bottom: 0.6 };
+    const innerW = page.w - m.left - m.right;
+    const innerH = page.h - m.top - m.bottom;
 
     const height = grid.length;
     const width = grid[0]?.length || 0;
@@ -659,8 +661,8 @@
     const verseReserve = opts.puzzleVerseSpacing || 0.75; // configurable space between puzzle grid and verse
     const cellSize = Math.min(innerW / width, (innerH - titleH - verseReserve) / height) * 0.88;
     const gridW = cellSize * width, gridH = cellSize * height;
-    const gridX = m.l + (innerW - gridW) / 2;
-    const gridY = m.t + (titleH ? titleH + 0.15 : 0);
+    const gridX = m.left + (innerW - gridW) / 2;
+    const gridY = m.top + (titleH ? titleH + 0.15 : 0);
 
     const gridColor = hexToRGB("#000000");
     const letterColor = hexToRGB("#000000");
@@ -670,7 +672,7 @@
     if (opts.title) {
       doc.setFont(opts.fontFamily || "helvetica", "bold");
       doc.setFontSize(opts.titleFontSize || 22);
-      doc.text(opts.title, page.w / 2, m.t + 0.2, { align: "center" });
+      doc.text(opts.title, page.w / 2, m.top + 0.2, { align: "center" });
     }
 
     // Outer border + cell lines
@@ -745,7 +747,7 @@
 
       function flushLine() {
         if (!line.length) return;
-        let cursorX = m.l;  // Start at left margin instead of center
+        let cursorX = m.left;  // Start at left margin instead of center
         for (const seg of line) {
           doc.setFont(opts.fontFamily || "helvetica", seg.bold ? "bold" : "normal");
           doc.setFontSize(verseFontSize);  // Use configured verse font size
@@ -773,7 +775,7 @@
       if (opts.reference) {
         doc.setFont(opts.fontFamily || "helvetica", "italic");
         doc.setFontSize(verseFontSize);
-        doc.text(opts.reference, m.l, y + 0.3, { align: "left" });
+        doc.text(opts.reference, m.left, y + 0.3, { align: "left" });
       }
     }
   }
@@ -782,7 +784,7 @@
     const { jsPDF } = window.jspdf;
     const { title, grid, placed, verse, reference, words, lineSpacing,
             titleFontSize, verseFontSize, puzzleLetterFontSize,
-            puzzleVerseSpacing, pageMargins } = state;
+            puzzleVerseSpacing, marginTop, marginLeft, marginRight, marginBottom } = state;
 
     const opts = {
       title,
@@ -795,7 +797,12 @@
       verseFontSize: verseFontSize || 18,
       puzzleLetterFontSize: puzzleLetterFontSize || 0,
       puzzleVerseSpacing: puzzleVerseSpacing || 0.75,
-      pageMargins: pageMargins || 0.6
+      margins: {
+        top: marginTop || 0.6,
+        left: marginLeft || 0.6,
+        right: marginRight || 0.6,
+        bottom: marginBottom || 0.6
+      }
     };
 
     // Puzzle
@@ -834,7 +841,10 @@
     const verseFontSize = parseFloat(verseFontSizeInput.value) || 18;
     const puzzleLetterFontSize = parseFloat(puzzleLetterFontSizeInput.value) || 0; // 0 means auto
     const puzzleVerseSpacing = parseFloat(puzzleVerseSpacingInput.value) || 0.75;
-    const pageMargins = parseFloat(pageMarginsInput.value) || 0.6;
+    const marginTop = parseFloat(marginTopInput.value) || 0.6;
+    const marginLeft = parseFloat(marginLeftInput.value) || 0.6;
+    const marginRight = parseFloat(marginRightInput.value) || 0.6;
+    const marginBottom = parseFloat(marginBottomInput.value) || 0.6;
 
     if (!verse)       { messages.textContent = "Please paste or select a verse."; return; }
     if (!words.length){ messages.textContent = "Please provide at least one target word."; return; }
@@ -847,7 +857,7 @@
     lastState = { 
       title, grid, placed, verse, reference, words, lineSpacing,
       titleFontSize, verseFontSize, puzzleLetterFontSize, 
-      puzzleVerseSpacing, pageMargins 
+      puzzleVerseSpacing, marginTop, marginLeft, marginRight, marginBottom
     };
   });
 
