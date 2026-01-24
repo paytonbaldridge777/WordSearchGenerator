@@ -249,8 +249,66 @@
       <label for="title">Puzzle Title (optional)</label>
       <input id="title" type="text" placeholder="e.g., Psalm 23 Word Search" class="variable-input" />
 
+      <label for="fontFamily">Font Family</label>
+      <select id="fontFamily" class="variable-input">
+        <option value="helvetica">Helvetica</option>
+        <option value="times">Times New Roman</option>
+        <option value="courier">Courier</option>
+        <option value="arial">Arial</option>
+        <option value="georgia">Georgia</option>
+        <option value="satisfy">Satisfy (Script)</option>
+        <option value="allura">Allura (Script)</option>
+        <option value="great-vibes">Great Vibes (Script)</option>
+        <option value="pacifico">Pacifico (Script)</option>
+      </select>
+      
+      <label for="gridSize">Grid Size</label>
+      <select id="gridSize" class="variable-input">
+        <option value="10">10×10</option>
+        <option value="12">12×12</option>
+        <option value="14" selected>14×14</option>
+        <option value="16">16×16</option>
+        <option value="18">18×18</option>
+        <option value="20">20×20</option>
+      </select>
+
       <label for="lineSpacing">Line Spacing</label>
       <input id="lineSpacing" type="number" min="0.1" max="2.0" step="0.1" value="0.3" class="variable-input" />
+      
+      <div style="margin-top: 16px;">
+        <label style="font-weight: 600; margin-bottom: 8px; display: block;">Word Directions</label>
+        <label style="display: inline-flex; align-items: center; margin-right: 16px;">
+          <input type="checkbox" id="allowH" checked style="margin-right: 6px;" />
+          Horizontal
+        </label>
+        <label style="display: inline-flex; align-items: center; margin-right: 16px;">
+          <input type="checkbox" id="allowV" checked style="margin-right: 6px;" />
+          Vertical
+        </label>
+        <label style="display: inline-flex; align-items: center; margin-right: 16px;">
+          <input type="checkbox" id="allowD" checked style="margin-right: 6px;" />
+          Diagonal
+        </label>
+        <label style="display: inline-flex; align-items: center;">
+          <input type="checkbox" id="allowBack" style="margin-right: 6px;" />
+          Backwards
+        </label>
+      </div>
+      
+      <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+        <div>
+          <label for="letterColor">Letter Color</label>
+          <input type="color" id="letterColor" value="#000000" style="width: 100%; height: 40px; cursor: pointer;" />
+        </div>
+        <div>
+          <label for="gridColor">Grid Color</label>
+          <input type="color" id="gridColor" value="#000000" style="width: 100%; height: 40px; cursor: pointer;" />
+        </div>
+        <div>
+          <label for="circleColor">Highlight Color</label>
+          <input type="color" id="circleColor" value="#e6c200" style="width: 100%; height: 40px; cursor: pointer;" />
+        </div>
+      </div>
     </fieldset>
 
     <fieldset>

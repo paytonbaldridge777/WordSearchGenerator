@@ -44,8 +44,66 @@
     "Consolas": "courier",
     "Lucida Console": "courier",
     "Baskerville": "times",
-    "Caslon": "times"
+    "Caslon": "times",
+    // Custom script fonts (loaded via loadCustomFonts)
+    "Satisfy": "Satisfy",
+    "Allura": "Allura",
+    "Great Vibes": "GreatVibes",
+    "Pacifico": "Pacifico"
   };
+
+  // Set of custom font names for fallback detection
+  const CUSTOM_FONT_NAMES = new Set(["Satisfy", "Allura", "GreatVibes", "Pacifico"]);
+
+  // ==================== CUSTOM FONTS FOR jsPDF ====================
+  // Base64-encoded font data for custom fonts
+  // 
+  // IMPORTANT: This object is intentionally empty. To enable custom fonts:
+  //   1. Download .ttf file from Google Fonts (https://fonts.google.com/)
+  //   2. Convert to base64: `base64 -w 0 fontname.ttf` or use online converter
+  //   3. Add to CUSTOM_FONTS object below: "FontName": "base64string"
+  //   4. Uncomment corresponding loading code in loadCustomFonts() function
+  //   5. See FONT_SETUP.md for detailed instructions
+  //
+  // Until font data is added, custom fonts will fallback to helvetica.
+  // This is expected behavior and allows the UI to show font options
+  // while the infrastructure waits for font data to be added.
+  
+  const CUSTOM_FONTS = {
+    // Example structure (actual base64 data should be added here):
+    // "Satisfy": "AAEAAAASAQAABAAgRFNJRwAAAAEAAAS8AAAACEdERUYAMQBa..." 
+    // Each font is approximately 200-400KB in base64 format
+  };
+
+  // Function to load custom fonts into jsPDF document
+  // This must be called before any text is written to the PDF
+  function loadCustomFonts(doc) {
+    try {
+      // Load custom fonts from CUSTOM_FONTS object
+      // Uncomment and add base64 data to CUSTOM_FONTS above to enable custom fonts
+      
+      // Example for Satisfy font:
+      // if (CUSTOM_FONTS["Satisfy"]) {
+      //   doc.addFileToVFS("Satisfy.ttf", CUSTOM_FONTS["Satisfy"]);
+      //   doc.addFont("Satisfy.ttf", "Satisfy", "normal");
+      //   doc.addFont("Satisfy.ttf", "Satisfy", "bold");
+      // }
+      
+      // Example for Allura font:
+      // if (CUSTOM_FONTS["Allura"]) {
+      //   doc.addFileToVFS("Allura.ttf", CUSTOM_FONTS["Allura"]);
+      //   doc.addFont("Allura.ttf", "Allura", "normal");
+      //   doc.addFont("Allura.ttf", "Allura", "bold");
+      // }
+      
+      // Add similar code for GreatVibes, Pacifico, etc.
+      
+      return true;
+    } catch (error) {
+      console.error("Failed to load custom fonts:", error);
+      return false;
+    }
+  }
 
   const titleInput = el("title");
   const verseInput = el("verse");
@@ -692,7 +750,14 @@
 
   // Convert font names to jsPDF-compatible format
   function mapFontForPDF(fontName) {
-    return FONT_MAP[fontName] || "helvetica";
+    const mapped = FONT_MAP[fontName] || "helvetica";
+    // If it's a custom font, check if it's loaded
+    // If not loaded, fallback to helvetica
+    if (CUSTOM_FONT_NAMES.has(mapped) && !CUSTOM_FONTS[mapped]) {
+      console.warn(`Custom font "${mapped}" not loaded, falling back to helvetica`);
+      return "helvetica";
+    }
+    return mapped;
   }
 
   // Draw a real grid with centered letters; optionally highlight solution cells
@@ -864,10 +929,12 @@
 
     // Puzzle
     const docPuzzle = new jsPDF({ unit: "in", format: "letter" });
+    loadCustomFonts(docPuzzle); // Load custom fonts into the PDF document
     drawPDFGrid(docPuzzle, grid, placed, opts, false, true);  // Show verse on puzzle page
 
     // Solution
     const docSolution = new jsPDF({ unit: "in", format: "letter" });
+    loadCustomFonts(docSolution); // Load custom fonts into the PDF document
     drawPDFGrid(docSolution, grid, placed, opts, true, false);  // Don't show verse on solution page
 
     const base = (title || "WordSearch").trim().replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, "_");

@@ -56,6 +56,82 @@
   const uniq = (arr) => [...new Set(arr)];
   const byLengthDesc = (a,b) => b.length - a.length;
   const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
+
+  // Font name to jsPDF-compatible font mapping
+  const FONT_MAP = {
+    "helvetica": "helvetica",
+    "times": "times",
+    "courier": "courier",
+    "arial": "helvetica",
+    "georgia": "times",
+    "palatino": "times",
+    "garamond": "times",
+    "bookman": "times",
+    "comic-sans": "helvetica",
+    "trebuchet": "helvetica",
+    "impact": "helvetica",
+    "monaco": "courier",
+    "consolas": "courier",
+    "lucida-console": "courier",
+    // Custom script fonts (loaded via loadCustomFonts)
+    "satisfy": "Satisfy",
+    "allura": "Allura",
+    "great-vibes": "GreatVibes",
+    "pacifico": "Pacifico"
+  };
+
+  // Set of custom font names for fallback detection
+  const CUSTOM_FONT_NAMES = new Set(["Satisfy", "Allura", "GreatVibes", "Pacifico"]);
+
+  // ==================== CUSTOM FONTS FOR jsPDF ====================
+  // Base64-encoded font data for custom fonts
+  //
+  // IMPORTANT: This object is intentionally empty. To enable custom fonts:
+  //   1. Download .ttf file from Google Fonts
+  //   2. Convert to base64
+  //   3. Add to CUSTOM_FONTS object: "FontName": "base64string"
+  //   4. Uncomment loading code in loadCustomFonts()
+  //   5. See FONT_SETUP.md for detailed instructions
+  //
+  // Until font data is added, custom fonts will fallback to helvetica.
+  
+  const CUSTOM_FONTS = {
+    // Example structure (actual base64 data should be added here):
+    // "Satisfy": "AAEAAAASAQAABAAgRFNJRwAAAAEAAAS8AAAACEdERUYAMQBa..." 
+  };
+
+  // Function to load custom fonts into jsPDF document
+  function loadCustomFonts(doc) {
+    try {
+      // Load custom fonts from CUSTOM_FONTS object
+      // Uncomment and add base64 data to CUSTOM_FONTS above to enable custom fonts
+      
+      // Example for Satisfy font:
+      // if (CUSTOM_FONTS["Satisfy"]) {
+      //   doc.addFileToVFS("Satisfy.ttf", CUSTOM_FONTS["Satisfy"]);
+      //   doc.addFont("Satisfy.ttf", "Satisfy", "normal");
+      //   doc.addFont("Satisfy.ttf", "Satisfy", "bold");
+      // }
+      
+      return true;
+    } catch (error) {
+      console.error("Failed to load custom fonts:", error);
+      return false;
+    }
+  }
+
+  // Convert font names to jsPDF-compatible format
+  function mapFontForPDF(fontName) {
+    const normalized = (fontName || "helvetica").toLowerCase().replace(/\s+/g, "-");
+    const mapped = FONT_MAP[normalized] || "helvetica";
+    // If it's a custom font, check if it's loaded
+    // If not loaded, fallback to helvetica
+    if (CUSTOM_FONT_NAMES.has(mapped) && !CUSTOM_FONTS[mapped]) {
+      console.warn(`Custom font "${mapped}" not loaded, falling back to helvetica`);
+      return "helvetica";
+    }
+    return mapped;
+  }
 	// --- Local Bible loader (like the Task app's JSON import) ---
 	let bibleData = {};
 	const bookNumberMap = {
@@ -273,13 +349,17 @@
     const { jsPDF }=window.jspdf;
     const docPuzzle=new jsPDF({unit:"in",format:"letter"});
     const docSolution=new jsPDF({unit:"in",format:"letter"});
+    
+    // Load custom fonts into PDF documents
+    loadCustomFonts(docPuzzle);
+    loadCustomFonts(docSolution);
 
     const page={w:8.5,h:11},m={l:0.6,r:0.6,t:0.6,b:0.6},innerW=page.w-m.l-m.r,innerH=page.h-m.t-m.b;
     const N=grid.length,titleH=title?0.35:0,verseReserve=1.0;
     const cell = Math.min(innerW / N, (innerH - titleH - verseReserve) / N) * 0.75;
     const gridW=cell*N,gridH=cell*N,gridX=m.l+(innerW-gridW)/2,gridY=m.t+(titleH?titleH+0.15:0);
 
-    const font=opts.fontFamily,fontPt=clamp(cell*72*0.66,8,48),labelPt=18;
+    const font=mapFontForPDF(opts.fontFamily),fontPt=clamp(cell*72*0.66,8,48),labelPt=18;
     const letterRGB=hexToRGB(opts.letterColor),gridRGB=hexToRGB(opts.gridColor),highlightRGB=hexToRGB(opts.circleColor);
 
     function drawTitle(doc){if(!title)return;doc.setFont(font,"bold");doc.setFontSize(22);doc.text(title,page.w/2,m.t+0.2,{align:"center"});}
