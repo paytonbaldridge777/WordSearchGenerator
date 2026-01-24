@@ -29,6 +29,7 @@
   const titleFontSizeInput = el("titleFontSize");
   const verseFontSizeInput = el("verseFontSize");
   const puzzleLetterFontSizeInput = el("puzzleLetterFontSize");
+  const puzzleSizeMultiplierInput = el("puzzleSizeMultiplier");
   const puzzleVerseSpacingInput = el("puzzleVerseSpacing");
   const marginTopInput = el("marginTop");
   const marginLeftInput = el("marginLeft");
@@ -659,7 +660,8 @@
     const width = grid[0]?.length || 0;
     const titleH = opts.title ? 0.35 : 0;
     const verseReserve = opts.puzzleVerseSpacing || 0.75; // configurable space between puzzle grid and verse
-    const cellSize = Math.min(innerW / width, (innerH - titleH - verseReserve) / height) * 0.88;
+    const puzzleSizeMultiplier = opts.puzzleSizeMultiplier || 0.88;
+    const cellSize = Math.min(innerW / width, (innerH - titleH - verseReserve) / height) * puzzleSizeMultiplier;
     const gridW = cellSize * width, gridH = cellSize * height;
     const gridX = m.left + (innerW - gridW) / 2;
     const gridY = m.top + (titleH ? titleH + 0.15 : 0);
@@ -689,9 +691,10 @@
     // Solution highlights - removed cell background fill
 
     // Letters - use configured font size or auto-calculate based on cell size
-    const fontPt = (opts.puzzleLetterFontSize && opts.puzzleLetterFontSize > 0)
-      ? opts.puzzleLetterFontSize 
-      : Math.max(8, Math.min(48, cellSize * 72 * 0.66)); // Auto-calculate if not specified or set to 0
+    const letterSizePercent = (opts.puzzleLetterFontSize && opts.puzzleLetterFontSize > 0) 
+      ? opts.puzzleLetterFontSize / 100 
+      : 0.66;
+    const fontPt = Math.max(8, Math.min(48, cellSize * 72 * letterSizePercent));
     
     // Build a set of answer cell coordinates for quick lookup
     const answerCells = new Set();
@@ -784,7 +787,7 @@
     const { jsPDF } = window.jspdf;
     const { title, grid, placed, verse, reference, words, lineSpacing,
             titleFontSize, verseFontSize, puzzleLetterFontSize,
-            puzzleVerseSpacing, marginTop, marginLeft, marginRight, marginBottom } = state;
+            puzzleVerseSpacing, puzzleSizeMultiplier, marginTop, marginLeft, marginRight, marginBottom } = state;
 
     const opts = {
       title,
@@ -795,7 +798,8 @@
       lineSpacing: lineSpacing || 0.3,
       titleFontSize: titleFontSize || 22,
       verseFontSize: verseFontSize || 18,
-      puzzleLetterFontSize: puzzleLetterFontSize || 0,
+      puzzleLetterFontSize: puzzleLetterFontSize || 66,
+      puzzleSizeMultiplier: puzzleSizeMultiplier || 0.88,
       puzzleVerseSpacing: puzzleVerseSpacing || 0.75,
       margins: {
         top: marginTop || 0.6,
@@ -839,7 +843,8 @@
     const lineSpacing = parseFloat(lineSpacingInput.value) || 0.3;
     const titleFontSize = parseFloat(titleFontSizeInput.value) || 22;
     const verseFontSize = parseFloat(verseFontSizeInput.value) || 18;
-    const puzzleLetterFontSize = parseFloat(puzzleLetterFontSizeInput.value) || 0; // 0 means auto
+    const puzzleLetterFontSize = parseFloat(puzzleLetterFontSizeInput.value) || 66;
+    const puzzleSizeMultiplier = parseFloat(puzzleSizeMultiplierInput.value) || 0.88;
     const puzzleVerseSpacing = parseFloat(puzzleVerseSpacingInput.value) || 0.75;
     const marginTop = parseFloat(marginTopInput.value) || 0.6;
     const marginLeft = parseFloat(marginLeftInput.value) || 0.6;
@@ -857,7 +862,7 @@
     lastState = { 
       title, grid, placed, verse, reference, words, lineSpacing,
       titleFontSize, verseFontSize, puzzleLetterFontSize, 
-      puzzleVerseSpacing, marginTop, marginLeft, marginRight, marginBottom
+      puzzleVerseSpacing, puzzleSizeMultiplier, marginTop, marginLeft, marginRight, marginBottom
     };
   });
 
