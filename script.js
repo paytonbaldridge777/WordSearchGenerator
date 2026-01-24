@@ -20,12 +20,42 @@
   // ------------------ Main App ------------------
   const el = (id) => document.getElementById(id);
 
+  // Default font constants
+  const DEFAULT_TITLE_FONT = "Helvetica";
+  const DEFAULT_PUZZLE_FONT = "Courier";
+  const DEFAULT_VERSE_FONT = "Times";
+
+  // Font name to jsPDF-compatible font mapping
+  const FONT_MAP = {
+    "Helvetica": "helvetica",
+    "Arial": "helvetica",
+    "Times": "times",
+    "Times New Roman": "times",
+    "Courier": "courier",
+    "Courier New": "courier",
+    "Georgia": "times",
+    "Palatino": "times",
+    "Garamond": "times",
+    "Bookman": "times",
+    "Comic Sans MS": "helvetica",
+    "Trebuchet MS": "helvetica",
+    "Impact": "helvetica",
+    "Monaco": "courier",
+    "Consolas": "courier",
+    "Lucida Console": "courier",
+    "Baskerville": "times",
+    "Caslon": "times"
+  };
+
   const titleInput = el("title");
   const verseInput = el("verse");
   const wordsInput = el("words");
   const refInput   = el("reference");
   const sizeInput = el("puzzleSize");
   const lineSpacingInput = el("lineSpacing");
+  const titleFontInput = el("titleFont");
+  const puzzleFontInput = el("puzzleFont");
+  const verseFontInput = el("verseFont");
   const titleFontSizeInput = el("titleFontSize");
   const verseFontSizeInput = el("verseFontSize");
   const puzzleLetterFontSizeInput = el("puzzleLetterFontSize");
@@ -611,13 +641,23 @@
 
   // ------------------ Preview ------------------
   function renderPreview(title, grid, verse, reference, words, lineSpacing) {
+    // Get selected fonts with fallback to defaults
+    const titleFont = titleFontInput?.value || DEFAULT_TITLE_FONT;
+    const puzzleFont = puzzleFontInput?.value || DEFAULT_PUZZLE_FONT;
+    const verseFont = verseFontInput?.value || DEFAULT_VERSE_FONT;
+
+    // Apply title
     previewTitle.textContent = title || "Word Search";
+    previewTitle.style.fontFamily = titleFont;
+    
+    // Apply grid
     previewGrid.innerHTML = "";
     for (let r = 0; r < grid.length; r++) {
       const tr = document.createElement("tr");
       for (let c = 0; c < grid[r].length; c++) {
         const td = document.createElement("td");
         td.textContent = grid[r][c];
+        td.style.fontFamily = puzzleFont;
         tr.appendChild(td);
       }
       previewGrid.appendChild(tr);
@@ -634,7 +674,8 @@
       return tok;
     }).join("");
 
-    // Apply dynamic line spacing to preview verse
+    // Apply verse font and line spacing
+    previewVerse.style.fontFamily = verseFont;
     // Convert PDF spacing (inches) to a line-height multiplier
     // 0.3 inches ≈ 1.7 line-height is a reasonable conversion
     const lineHeight = 1 + (lineSpacing * 2.33); // scaling factor
@@ -647,6 +688,11 @@
   function hexToRGB(hex) {
     const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return m ? { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) } : { r:0,g:0,b:0 };
+  }
+
+  // Convert font names to jsPDF-compatible format
+  function mapFontForPDF(fontName) {
+    return FONT_MAP[fontName] || "helvetica";
   }
 
   // Draw a real grid with centered letters; optionally highlight solution cells
@@ -672,7 +718,8 @@
 
     // Title
     if (opts.title) {
-      doc.setFont(opts.fontFamily || "helvetica", "bold");
+      const titleFont = mapFontForPDF(opts.titleFont || DEFAULT_TITLE_FONT);
+      doc.setFont(titleFont, "bold");
       doc.setFontSize(opts.titleFontSize || 22);
       doc.text(opts.title, page.w / 2, m.top + 0.2, { align: "center" });
     }
@@ -713,20 +760,22 @@
         const key = r + "_" + c;
         const isAnswer = answerCells.has(key);
         
+        const puzzleFont = mapFontForPDF(opts.puzzleFont || DEFAULT_PUZZLE_FONT);
+        
         if (withHighlights) {
           // For solution page: bold answer letters, grey non-answer letters
           if (isAnswer) {
-            doc.setFont(opts.fontFamily || "helvetica", "bold");
+            doc.setFont(puzzleFont, "bold");
             doc.setFontSize(fontPt);
             doc.setTextColor(letterColor.r, letterColor.g, letterColor.b); // Black
           } else {
-            doc.setFont(opts.fontFamily || "helvetica", "normal");
+            doc.setFont(puzzleFont, "normal");
             doc.setFontSize(fontPt);
             doc.setTextColor(220, 220, 220); // Light grey
           }
         } else {
           // For puzzle page: all letters black and bold
-          doc.setFont(opts.fontFamily || "helvetica", "bold");
+          doc.setFont(puzzleFont, "bold");
           doc.setFontSize(fontPt);
           doc.setTextColor(letterColor.r, letterColor.g, letterColor.b);
         }
@@ -737,9 +786,10 @@
 
     // Verse + reference (only show on puzzle page, not solution page)
     if (showVerse) {
+      const verseFont = mapFontForPDF(opts.verseFont || DEFAULT_VERSE_FONT);
       const verseFontSize = opts.verseFontSize || 18;
       let y = gridY + gridH + (opts.puzzleVerseSpacing || 0.75);
-      doc.setFont(opts.fontFamily || "helvetica", "normal");
+      doc.setFont(verseFont, "normal");
       doc.setFontSize(verseFontSize);
 
       // Bold + underline the first occurrence of each target word
@@ -752,7 +802,7 @@
         if (!line.length) return;
         let cursorX = m.left;  // Start at left margin instead of center
         for (const seg of line) {
-          doc.setFont(opts.fontFamily || "helvetica", seg.bold ? "bold" : "normal");
+          doc.setFont(verseFont, seg.bold ? "bold" : "normal");
           doc.setFontSize(verseFontSize);  // Use configured verse font size
           doc.text(seg.text, cursorX, y, { baseline: "alphabetic" });
           if (seg.bold) {
@@ -776,7 +826,7 @@
       flushLine();
 
       if (opts.reference) {
-        doc.setFont(opts.fontFamily || "helvetica", "italic");
+        doc.setFont(verseFont, "italic");
         doc.setFontSize(verseFontSize);
         doc.text(opts.reference, m.left, y + 0.3, { align: "left" });
       }
@@ -786,6 +836,7 @@
   function exportPDFs(state) {
     const { jsPDF } = window.jspdf;
     const { title, grid, placed, verse, reference, words, lineSpacing,
+            titleFont, puzzleFont, verseFont,
             titleFontSize, verseFontSize, puzzleLetterFontSize,
             puzzleVerseSpacing, puzzleSizeMultiplier, marginTop, marginLeft, marginRight, marginBottom } = state;
 
@@ -794,7 +845,9 @@
       verse,
       reference,
       words,
-      fontFamily: "helvetica",
+      titleFont,
+      puzzleFont,
+      verseFont,
       lineSpacing: lineSpacing || 0.3,
       titleFontSize: titleFontSize || 22,
       verseFontSize: verseFontSize || 18,
@@ -840,6 +893,9 @@
     }
 
     // Get configuration values
+    const titleFont = titleFontInput?.value || DEFAULT_TITLE_FONT;
+    const puzzleFont = puzzleFontInput?.value || DEFAULT_PUZZLE_FONT;
+    const verseFont = verseFontInput?.value || DEFAULT_VERSE_FONT;
     const lineSpacing = parseFloat(lineSpacingInput.value) || 0.3;
     const titleFontSize = parseFloat(titleFontSizeInput.value) || 22;
     const verseFontSize = parseFloat(verseFontSizeInput.value) || 18;
@@ -861,6 +917,7 @@
 
     lastState = { 
       title, grid, placed, verse, reference, words, lineSpacing,
+      titleFont, puzzleFont, verseFont,
       titleFontSize, verseFontSize, puzzleLetterFontSize, 
       puzzleVerseSpacing, puzzleSizeMultiplier, marginTop, marginLeft, marginRight, marginBottom
     };
