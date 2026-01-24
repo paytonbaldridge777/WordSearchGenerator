@@ -20,6 +20,11 @@
   // ------------------ Main App ------------------
   const el = (id) => document.getElementById(id);
 
+  // Default font constants
+  const DEFAULT_TITLE_FONT = "Helvetica";
+  const DEFAULT_PUZZLE_FONT = "Courier";
+  const DEFAULT_VERSE_FONT = "Times";
+
   const titleInput = el("title");
   const verseInput = el("verse");
   const wordsInput = el("words");
@@ -711,7 +716,7 @@
 
     // Title
     if (opts.title) {
-      const titleFont = mapFontForPDF(opts.titleFont || "helvetica");
+      const titleFont = mapFontForPDF(opts.titleFont || DEFAULT_TITLE_FONT);
       doc.setFont(titleFont, "bold");
       doc.setFontSize(opts.titleFontSize || 22);
       doc.text(opts.title, page.w / 2, m.top + 0.2, { align: "center" });
@@ -753,7 +758,7 @@
         const key = r + "_" + c;
         const isAnswer = answerCells.has(key);
         
-        const puzzleFont = mapFontForPDF(opts.puzzleFont || "courier");
+        const puzzleFont = mapFontForPDF(opts.puzzleFont || DEFAULT_PUZZLE_FONT);
         
         if (withHighlights) {
           // For solution page: bold answer letters, grey non-answer letters
@@ -779,7 +784,7 @@
 
     // Verse + reference (only show on puzzle page, not solution page)
     if (showVerse) {
-      const verseFont = mapFontForPDF(opts.verseFont || "times");
+      const verseFont = mapFontForPDF(opts.verseFont || DEFAULT_VERSE_FONT);
       const verseFontSize = opts.verseFontSize || 18;
       let y = gridY + gridH + (opts.puzzleVerseSpacing || 0.75);
       doc.setFont(verseFont, "normal");
@@ -838,9 +843,9 @@
       verse,
       reference,
       words,
-      titleFont: titleFont || "helvetica",
-      puzzleFont: puzzleFont || "courier",
-      verseFont: verseFont || "times",
+      titleFont: titleFont || DEFAULT_TITLE_FONT,
+      puzzleFont: puzzleFont || DEFAULT_PUZZLE_FONT,
+      verseFont: verseFont || DEFAULT_VERSE_FONT,
       lineSpacing: lineSpacing || 0.3,
       titleFontSize: titleFontSize || 22,
       verseFontSize: verseFontSize || 18,
@@ -886,9 +891,9 @@
     }
 
     // Get configuration values
-    const titleFont = titleFontInput.value || "Helvetica";
-    const puzzleFont = puzzleFontInput.value || "Courier";
-    const verseFont = verseFontInput.value || "Times";
+    const titleFont = titleFontInput.value || DEFAULT_TITLE_FONT;
+    const puzzleFont = puzzleFontInput.value || DEFAULT_PUZZLE_FONT;
+    const verseFont = verseFontInput.value || DEFAULT_VERSE_FONT;
     const lineSpacing = parseFloat(lineSpacingInput.value) || 0.3;
     const titleFontSize = parseFloat(titleFontSizeInput.value) || 22;
     const verseFontSize = parseFloat(verseFontSizeInput.value) || 18;
