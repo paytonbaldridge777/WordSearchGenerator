@@ -619,10 +619,10 @@
 
   // ------------------ Preview ------------------
   function renderPreview(title, grid, verse, reference, words, lineSpacing) {
-    // Get selected fonts
-    const titleFont = titleFontInput.value;
-    const puzzleFont = puzzleFontInput.value;
-    const verseFont = verseFontInput.value;
+    // Get selected fonts with fallback to defaults
+    const titleFont = titleFontInput?.value || DEFAULT_TITLE_FONT;
+    const puzzleFont = puzzleFontInput?.value || DEFAULT_PUZZLE_FONT;
+    const verseFont = verseFontInput?.value || DEFAULT_VERSE_FONT;
 
     // Apply title
     previewTitle.textContent = title || "Word Search";
@@ -891,9 +891,9 @@
     }
 
     // Get configuration values
-    const titleFont = titleFontInput.value || DEFAULT_TITLE_FONT;
-    const puzzleFont = puzzleFontInput.value || DEFAULT_PUZZLE_FONT;
-    const verseFont = verseFontInput.value || DEFAULT_VERSE_FONT;
+    const titleFont = titleFontInput?.value || DEFAULT_TITLE_FONT;
+    const puzzleFont = puzzleFontInput?.value || DEFAULT_PUZZLE_FONT;
+    const verseFont = verseFontInput?.value || DEFAULT_VERSE_FONT;
     const lineSpacing = parseFloat(lineSpacingInput.value) || 0.3;
     const titleFontSize = parseFloat(titleFontSizeInput.value) || 22;
     const verseFontSize = parseFloat(verseFontSizeInput.value) || 18;
