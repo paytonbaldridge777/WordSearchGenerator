@@ -57,12 +57,17 @@
 
   // ==================== CUSTOM FONTS FOR jsPDF ====================
   // Base64-encoded font data for custom fonts
-  // To add fonts:
+  // 
+  // IMPORTANT: This object is intentionally empty. To enable custom fonts:
   //   1. Download .ttf file from Google Fonts (https://fonts.google.com/)
   //   2. Convert to base64: `base64 -w 0 fontname.ttf` or use online converter
   //   3. Add to CUSTOM_FONTS object below: "FontName": "base64string"
-  //   4. Add loading code in loadCustomFonts() function
-  //   5. Update FONT_MAP above with the new font
+  //   4. Uncomment corresponding loading code in loadCustomFonts() function
+  //   5. See FONT_SETUP.md for detailed instructions
+  //
+  // Until font data is added, custom fonts will fallback to helvetica.
+  // This is expected behavior and allows the UI to show font options
+  // while the infrastructure waits for font data to be added.
   
   const CUSTOM_FONTS = {
     // Example structure (actual base64 data should be added here):

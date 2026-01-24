@@ -84,6 +84,17 @@
   const CUSTOM_FONT_NAMES = new Set(["Satisfy", "Allura", "GreatVibes", "Pacifico"]);
 
   // ==================== CUSTOM FONTS FOR jsPDF ====================
+  // Base64-encoded font data for custom fonts
+  //
+  // IMPORTANT: This object is intentionally empty. To enable custom fonts:
+  //   1. Download .ttf file from Google Fonts
+  //   2. Convert to base64
+  //   3. Add to CUSTOM_FONTS object: "FontName": "base64string"
+  //   4. Uncomment loading code in loadCustomFonts()
+  //   5. See FONT_SETUP.md for detailed instructions
+  //
+  // Until font data is added, custom fonts will fallback to helvetica.
+  
   const CUSTOM_FONTS = {
     // Example structure (actual base64 data should be added here):
     // "Satisfy": "AAEAAAASAQAABAAgRFNJRwAAAAEAAAS8AAAACEdERUYAMQBa..." 
