@@ -80,6 +80,9 @@
     "pacifico": "Pacifico"
   };
 
+  // Set of custom font names for fallback detection
+  const CUSTOM_FONT_NAMES = new Set(["Satisfy", "Allura", "GreatVibes", "Pacifico"]);
+
   // ==================== CUSTOM FONTS FOR jsPDF ====================
   const CUSTOM_FONTS = {
     // Example structure (actual base64 data should be added here):
@@ -110,9 +113,9 @@
   function mapFontForPDF(fontName) {
     const normalized = (fontName || "helvetica").toLowerCase().replace(/\s+/g, "-");
     const mapped = FONT_MAP[normalized] || "helvetica";
-    // If it's a custom font (capitalized), check if it's loaded
+    // If it's a custom font, check if it's loaded
     // If not loaded, fallback to helvetica
-    if (mapped && mapped[0] === mapped[0].toUpperCase() && !CUSTOM_FONTS[mapped]) {
+    if (CUSTOM_FONT_NAMES.has(mapped) && !CUSTOM_FONTS[mapped]) {
       console.warn(`Custom font "${mapped}" not loaded, falling back to helvetica`);
       return "helvetica";
     }
