@@ -742,7 +742,14 @@
 
   // Convert font names to jsPDF-compatible format
   function mapFontForPDF(fontName) {
-    return FONT_MAP[fontName] || "helvetica";
+    const mapped = FONT_MAP[fontName] || "helvetica";
+    // If it's a custom font (capitalized), check if it's loaded
+    // If not loaded, fallback to helvetica
+    if (mapped && mapped[0] === mapped[0].toUpperCase() && !CUSTOM_FONTS[mapped]) {
+      console.warn(`Custom font "${mapped}" not loaded, falling back to helvetica`);
+      return "helvetica";
+    }
+    return mapped;
   }
 
   // Draw a real grid with centered letters; optionally highlight solution cells

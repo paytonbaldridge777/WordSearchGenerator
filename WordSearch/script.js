@@ -109,7 +109,14 @@
   // Convert font names to jsPDF-compatible format
   function mapFontForPDF(fontName) {
     const normalized = (fontName || "helvetica").toLowerCase().replace(/\s+/g, "-");
-    return FONT_MAP[normalized] || "helvetica";
+    const mapped = FONT_MAP[normalized] || "helvetica";
+    // If it's a custom font (capitalized), check if it's loaded
+    // If not loaded, fallback to helvetica
+    if (mapped && mapped[0] === mapped[0].toUpperCase() && !CUSTOM_FONTS[mapped]) {
+      console.warn(`Custom font "${mapped}" not loaded, falling back to helvetica`);
+      return "helvetica";
+    }
+    return mapped;
   }
 	// --- Local Bible loader (like the Task app's JSON import) ---
 	let bibleData = {};
