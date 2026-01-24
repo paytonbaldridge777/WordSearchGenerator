@@ -100,6 +100,30 @@
       font-size: 1.1rem;
       padding: 0 10px;
     }
+    .collapsible-legend {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .collapsible-legend::before {
+      content: '▶';
+      display: inline-block;
+      transition: transform 0.3s ease;
+      font-size: 0.8em;
+    }
+    .collapsible-legend.expanded::before {
+      transform: rotate(90deg);
+    }
+    .fieldset-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .fieldset-content.expanded {
+      max-height: 2000px;
+    }
     label { 
       display: block; 
       margin: 14px 0 6px; 
@@ -272,40 +296,82 @@
       <input id="reference" type="text" placeholder="Psalm 23:1" />
     </fieldset>
     
-     <fieldset>
-      <legend>Variables</legend>
-      <label for="puzzleSize">Puzzle Size (6-20)</label>
-      <input id="puzzleSize" type="number" min="6" max="20" value="12" class="variable-input" />
+    <fieldset>
+      <legend class="collapsible-legend" id="variablesLegend">Variables</legend>
+      <div class="fieldset-content" id="variablesContent">
+        <label for="titleFont">Title Font</label>
+        <select id="titleFont" class="variable-input">
+          <option value="Helvetica">Helvetica</option>
+          <option value="Times">Times New Roman</option>
+          <option value="Courier">Courier</option>
+          <option value="Arial">Arial</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Palatino">Palatino</option>
+          <option value="Garamond">Garamond</option>
+          <option value="Bookman">Bookman</option>
+          <option value="Comic Sans MS">Comic Sans MS</option>
+          <option value="Trebuchet MS">Trebuchet MS</option>
+          <option value="Impact">Impact</option>
+        </select>
 
-      <label for="puzzleSizeMultiplier">Puzzle Size (scale)</label>
-      <input id="puzzleSizeMultiplier" type="number" min="0.5" max="1.2" step="0.01" value="0.74" placeholder="0.88" class="variable-input" />
+        <label for="puzzleFont">Puzzle Characters Font</label>
+        <select id="puzzleFont" class="variable-input">
+          <option value="Courier">Courier</option>
+          <option value="Helvetica">Helvetica</option>
+          <option value="Times">Times New Roman</option>
+          <option value="Arial">Arial</option>
+          <option value="Monaco">Monaco</option>
+          <option value="Consolas">Consolas</option>
+          <option value="Lucida Console">Lucida Console</option>
+        </select>
 
-      <label for="lineSpacing">Line Spacing</label>
-      <input id="lineSpacing" type="number" min="0.1" max="2.0" step="0.1" value="0.07" class="variable-input" />
+        <label for="verseFont">Verse Font</label>
+        <select id="verseFont" class="variable-input">
+          <option value="Times">Times New Roman</option>
+          <option value="Helvetica">Helvetica</option>
+          <option value="Courier">Courier</option>
+          <option value="Arial">Arial</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Palatino">Palatino</option>
+          <option value="Garamond">Garamond</option>
+          <option value="Bookman">Bookman</option>
+          <option value="Baskerville">Baskerville</option>
+          <option value="Caslon">Caslon</option>
+        </select>
 
-      <label for="titleFontSize">Font Size for Title (pt)</label>
-      <input id="titleFontSize" type="number" min="10" max="36" value="22" class="variable-input" />
+        <label for="puzzleSize">Puzzle Size (6-20)</label>
+        <input id="puzzleSize" type="number" min="6" max="20" value="12" class="variable-input" />
 
-      <label for="verseFontSize">Font Size for Verse (pt)</label>
-      <input id="verseFontSize" type="number" min="10" max="24" value="16" class="variable-input" />
+        <label for="puzzleSizeMultiplier">Puzzle Size (scale)</label>
+        <input id="puzzleSizeMultiplier" type="number" min="0.5" max="1.2" step="0.01" value="0.74" placeholder="0.88" class="variable-input" />
 
-      <label for="puzzleLetterFontSize">Puzzle Letter Size (%)</label>
-      <input id="puzzleLetterFontSize" type="number" min="40" max="100" step="1" value="50" placeholder="50" class="variable-input" />
+        <label for="lineSpacing">Line Spacing</label>
+        <input id="lineSpacing" type="number" min="0.1" max="2.0" step="0.1" value="0.07" class="variable-input" />
 
-      <label for="puzzleVerseSpacing">Space Between Puzzle and Verse (in)</label>
-      <input id="puzzleVerseSpacing" type="number" min="0.25" max="2.0" step="0.25" value="0.5" class="variable-input" />
+        <label for="titleFontSize">Font Size for Title (pt)</label>
+        <input id="titleFontSize" type="number" min="10" max="36" value="22" class="variable-input" />
 
-      <label for="marginTop">Top Margin (in)</label>
-      <input id="marginTop" type="number" min="0.25" max="2.0" step="0.06" value="0.6" class="variable-input" />
+        <label for="verseFontSize">Font Size for Verse (pt)</label>
+        <input id="verseFontSize" type="number" min="10" max="24" value="16" class="variable-input" />
 
-      <label for="marginLeft">Left Margin (in)</label>
-      <input id="marginLeft" type="number" min="0.25" max="2.0" step="0.06" value="1" class="variable-input" />
+        <label for="puzzleLetterFontSize">Puzzle Letter Size (%)</label>
+        <input id="puzzleLetterFontSize" type="number" min="40" max="100" step="1" value="50" placeholder="50" class="variable-input" />
 
-      <label for="marginRight">Right Margin (in)</label>
-      <input id="marginRight" type="number" min="0.25" max="2.0" step="0.06" value="1" class="variable-input" />
+        <label for="puzzleVerseSpacing">Space Between Puzzle and Verse (in)</label>
+        <input id="puzzleVerseSpacing" type="number" min="0.25" max="2.0" step="0.25" value="0.5" class="variable-input" />
 
-      <label for="marginBottom">Bottom Margin (in)</label>
-      <input id="marginBottom" type="number" min="0.25" max="2.0" step="0.06" value="0.6" class="variable-input" />
+        <label for="marginTop">Top Margin (in)</label>
+        <input id="marginTop" type="number" min="0.25" max="2.0" step="0.06" value="0.6" class="variable-input" />
+
+        <label for="marginLeft">Left Margin (in)</label>
+        <input id="marginLeft" type="number" min="0.25" max="2.0" step="0.06" value="1" class="variable-input" />
+
+        <label for="marginRight">Right Margin (in)</label>
+        <input id="marginRight" type="number" min="0.25" max="2.0" step="0.06" value="1" class="variable-input" />
+
+        <label for="marginBottom">Bottom Margin (in)</label>
+        <input id="marginBottom" type="number" min="0.25" max="2.0" step="0.06" value="0.6" class="variable-input" />
+      </div>
     </fieldset>
 
     <button id="btnGenerate">Generate Preview</button>
@@ -322,13 +388,14 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+      // Collapsible Variables fieldset
+      document.getElementById('variablesLegend').addEventListener('click', function() {
+        this.classList.toggle('expanded');
+        document.getElementById('variablesContent').classList.toggle('expanded');
+      });
+    </script>
     <script src="script.js"></script>
   </div>
 </body>
 </html>
-
-
-
-
-
-
