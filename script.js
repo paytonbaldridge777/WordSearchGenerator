@@ -656,7 +656,7 @@
     const height = grid.length;
     const width = grid[0]?.length || 0;
     const titleH = opts.title ? 0.35 : 0;
-    const verseReserve = opts.puzzleVerseSpacing || 0.75; // configurable space below for verse and reference
+    const verseReserve = opts.puzzleVerseSpacing || 0.75; // configurable space between puzzle grid and verse
     const cellSize = Math.min(innerW / width, (innerH - titleH - verseReserve) / height) * 0.88;
     const gridW = cellSize * width, gridH = cellSize * height;
     const gridX = m.l + (innerW - gridW) / 2;
@@ -686,10 +686,10 @@
 
     // Solution highlights - removed cell background fill
 
-    // Letters
-    const fontPt = opts.puzzleLetterFontSize > 0 
+    // Letters - use configured font size or auto-calculate based on cell size
+    const fontPt = (opts.puzzleLetterFontSize && opts.puzzleLetterFontSize > 0)
       ? opts.puzzleLetterFontSize 
-      : Math.max(8, Math.min(48, cellSize * 72 * 0.66)); // Auto-calculate if not specified
+      : Math.max(8, Math.min(48, cellSize * 72 * 0.66)); // Auto-calculate if not specified or set to 0
     
     // Build a set of answer cell coordinates for quick lookup
     const answerCells = new Set();
