@@ -25,6 +25,28 @@
   const DEFAULT_PUZZLE_FONT = "Courier";
   const DEFAULT_VERSE_FONT = "Times";
 
+  // Font name to jsPDF-compatible font mapping
+  const FONT_MAP = {
+    "Helvetica": "helvetica",
+    "Arial": "helvetica",
+    "Times": "times",
+    "Times New Roman": "times",
+    "Courier": "courier",
+    "Courier New": "courier",
+    "Georgia": "times",
+    "Palatino": "times",
+    "Garamond": "times",
+    "Bookman": "times",
+    "Comic Sans MS": "helvetica",
+    "Trebuchet MS": "helvetica",
+    "Impact": "helvetica",
+    "Monaco": "courier",
+    "Consolas": "courier",
+    "Lucida Console": "courier",
+    "Baskerville": "times",
+    "Caslon": "times"
+  };
+
   const titleInput = el("title");
   const verseInput = el("verse");
   const wordsInput = el("words");
@@ -670,27 +692,7 @@
 
   // Convert font names to jsPDF-compatible format
   function mapFontForPDF(fontName) {
-    const fontMap = {
-      "Helvetica": "helvetica",
-      "Arial": "helvetica",
-      "Times": "times",
-      "Times New Roman": "times",
-      "Courier": "courier",
-      "Courier New": "courier",
-      "Georgia": "times",
-      "Palatino": "times",
-      "Garamond": "times",
-      "Bookman": "times",
-      "Comic Sans MS": "helvetica",
-      "Trebuchet MS": "helvetica",
-      "Impact": "helvetica",
-      "Monaco": "courier",
-      "Consolas": "courier",
-      "Lucida Console": "courier",
-      "Baskerville": "times",
-      "Caslon": "times"
-    };
-    return fontMap[fontName] || "helvetica";
+    return FONT_MAP[fontName] || "helvetica";
   }
 
   // Draw a real grid with centered letters; optionally highlight solution cells
@@ -843,9 +845,9 @@
       verse,
       reference,
       words,
-      titleFont: titleFont || DEFAULT_TITLE_FONT,
-      puzzleFont: puzzleFont || DEFAULT_PUZZLE_FONT,
-      verseFont: verseFont || DEFAULT_VERSE_FONT,
+      titleFont,
+      puzzleFont,
+      verseFont,
       lineSpacing: lineSpacing || 0.3,
       titleFontSize: titleFontSize || 22,
       verseFontSize: verseFontSize || 18,
