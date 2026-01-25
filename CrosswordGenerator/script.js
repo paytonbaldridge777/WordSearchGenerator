@@ -772,26 +772,15 @@
       }
     }
     
-    // If no intersections found, try random placements (fallback)
-    if (possibilities.length === 0) {
-      for (let attempts = 0; attempts < 100; attempts++) {
-        const direction = Math.random() < 0.5 ? "across" : "down";
-        const row = Math.floor(Math.random() * grid.length);
-        const col = Math.floor(Math.random() * grid.length);
-        
-        if (canPlaceWord(grid, word, row, col, direction)) {
-          const score = calculatePlacementScore(grid, word, row, col, direction);
-          possibilities.push({ row, col, direction, score });
-        }
-      }
-    }
-    
     // Return best placement (highest score)
+    // NO RANDOM FALLBACK - we only place words that intersect with existing words
+    // This ensures all words in the crossword are connected (traditional crossword requirement)
     if (possibilities.length > 0) {
       possibilities.sort((a, b) => b.score - a.score);
       return possibilities[0];
     }
     
+    // Return null if no valid intersection placement found
     return null;
   }
 
