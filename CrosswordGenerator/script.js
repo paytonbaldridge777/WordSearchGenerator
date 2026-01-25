@@ -758,9 +758,8 @@
       wordClueList.appendChild(item);
       
       // Focus the clue input if it's empty (newly added from suggestion)
-      // Use setTimeout to ensure DOM is fully updated before focusing
       if (!pair.clue) {
-        setTimeout(() => clueInput.focus(), 0);
+        clueInput.focus();
       }
     });
   }
