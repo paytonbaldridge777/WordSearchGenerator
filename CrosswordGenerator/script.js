@@ -87,6 +87,11 @@
   const btnAddWord = el("btnAddWord");
   const wordClueList = el("wordClueList");
   const verseText = el("verseText");
+  
+  // Word suggestion elements
+  const btnSuggestWords = el("btnSuggestWords");
+  const suggestedWordsContainer = el("suggestedWordsContainer");
+  const suggestedWordsChips = el("suggestedWordsChips");
 
   const titleFontInput = el("titleFont");
   const gridFontInput = el("gridFont");
@@ -549,11 +554,98 @@
     const text = verseTexts.join(" ");
     verseText.value = text;
     
+    // Enable/disable suggest words button based on verse text
+    btnSuggestWords.disabled = text.trim().length === 0;
+    
     // Auto-populate reference
     refInput.value = `${book} ${chapter}:${verseNums.join(",")}`;
   });
 
   // ------------------ Word/Clue Management ------------------
+  
+  // Helper function to show messages
+  function showMessage(text, type = 'info') {
+    messages.textContent = text;
+    messages.style.color = type === 'error' ? 'var(--error-text)' : 
+                           type === 'warning' ? 'orange' : 
+                           type === 'success' ? 'green' : 'var(--text-primary)';
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      if (messages.textContent === text) {
+        messages.textContent = '';
+      }
+    }, 5000);
+  }
+  
+  // Extract suggested words from verse text
+  function extractSuggestedWords(verseText) {
+    // Common words to filter out
+    const commonWords = new Set([
+      'a', 'an', 'the', 'and', 'or', 'but', 'of', 'to', 'in', 'is', 'was', 
+      'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
+      'will', 'would', 'should', 'could', 'may', 'might', 'can', 'shall', 
+      'am', 'are', 'for', 'with', 'at', 'by', 'from', 'as', 'on', 'it',
+      'he', 'she', 'they', 'them', 'his', 'her', 'their', 'this', 'that',
+      'these', 'those', 'not', 'no', 'yes', 'if', 'then', 'than', 'all',
+      'any', 'some', 'my', 'me', 'you', 'your', 'we', 'us', 'our', 'him',
+      'into', 'up', 'out', 'who', 'what', 'when', 'where', 'which', 'why', 'how'
+    ]);
+    
+    // Extract words
+    const words = verseText.match(/[a-zA-Z]+/g) || [];
+    const suggestions = [];
+    const seen = new Set();
+    
+    for (const word of words) {
+      const cleanWord = word.toUpperCase();
+      
+      // Filter: must be 4+ letters, not common, not duplicate
+      if (cleanWord.length >= 4 && 
+          !commonWords.has(word.toLowerCase()) && 
+          !seen.has(cleanWord)) {
+        
+        // Find context snippet (portion of verse containing this word)
+        const wordIndex = verseText.toLowerCase().indexOf(word.toLowerCase());
+        const contextStart = Math.max(0, wordIndex - 20);
+        const contextEnd = Math.min(verseText.length, wordIndex + word.length + 30);
+        let snippet = verseText.substring(contextStart, contextEnd);
+        
+        // Add ellipsis if truncated
+        if (contextStart > 0) snippet = '...' + snippet;
+        if (contextEnd < verseText.length) snippet = snippet + '...';
+        
+        suggestions.push({
+          word: cleanWord,
+          snippet: snippet.trim()
+        });
+        
+        seen.add(cleanWord);
+      }
+    }
+    
+    // Sort by length (longest first)
+    suggestions.sort((a, b) => b.word.length - a.word.length);
+    
+    return suggestions;
+  }
+  
+  // Function to add word from suggestion (with empty clue)
+  function addWordFromSuggestion(word) {
+    // Check if word already exists in word-clue list
+    const existingWords = wordCluePairs.map(pair => pair.word);
+    
+    if (existingWords.includes(word)) {
+      showMessage(`"${word}" is already in your list`, 'warning');
+      return;
+    }
+    
+    // Add to word-clue list with empty clue
+    wordCluePairs.push({ word, clue: '' });
+    renderWordClueList();
+    
+    showMessage(`Added "${word}" to list - please add a clue`, 'success');
+  }
   
   function sanitizeWord(word) {
     return word.toUpperCase().replace(/[^A-Z]/g, "").trim();
@@ -648,6 +740,58 @@
       e.preventDefault();
       addWordClue();
     }
+  });
+  
+  // ------------------ Word Suggestion Feature ------------------
+  
+  // Enable "Suggest Words" button when verse text is available
+  verseText.addEventListener('input', () => {
+    const hasText = verseText.value.trim().length > 0;
+    btnSuggestWords.disabled = !hasText;
+  });
+  
+  // Handle "Suggest Words" button click
+  btnSuggestWords.addEventListener('click', () => {
+    const verseTextValue = verseText.value.trim();
+    if (!verseTextValue) return;
+    
+    // Extract suggestions
+    const suggestions = extractSuggestedWords(verseTextValue);
+    
+    if (suggestions.length === 0) {
+      showMessage('No significant words found in verses (need 4+ letter words)', 'warning');
+      return;
+    }
+    
+    // Clear previous suggestions
+    suggestedWordsChips.innerHTML = '';
+    
+    // Create word chips
+    suggestions.forEach(suggestion => {
+      const chip = document.createElement('div');
+      chip.className = 'word-chip';
+      chip.dataset.word = suggestion.word;
+      
+      chip.innerHTML = `
+        <span class="word-chip-word">${suggestion.word}</span>
+        <span class="word-chip-snippet">"${suggestion.snippet}"</span>
+      `;
+      
+      chip.addEventListener('click', () => {
+        if (!chip.classList.contains('added')) {
+          addWordFromSuggestion(suggestion.word);
+          chip.classList.add('added');
+          chip.style.pointerEvents = 'none';
+        }
+      });
+      
+      suggestedWordsChips.appendChild(chip);
+    });
+    
+    // Show suggestions container
+    suggestedWordsContainer.style.display = 'block';
+    
+    showMessage(`Found ${suggestions.length} suggested words - click to add`, 'success');
   });
 
   // ------------------ Crossword Generation Algorithm ------------------
@@ -1247,6 +1391,11 @@
     // Clear word/clue pairs
     wordCluePairs = [];
     renderWordClueList();
+    
+    // Clear word suggestions
+    suggestedWordsContainer.style.display = "none";
+    suggestedWordsChips.innerHTML = "";
+    btnSuggestWords.disabled = true;
     
     // Clear preview
     previewContainer.style.display = "none";
