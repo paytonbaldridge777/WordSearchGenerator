@@ -599,14 +599,15 @@
     
     for (const word of words) {
       const cleanWord = word.toUpperCase();
+      const lowerWord = word.toLowerCase();
       
       // Filter: must be 4+ letters, not common, not duplicate
       if (cleanWord.length >= 4 && 
-          !commonWords.has(word.toLowerCase()) && 
+          !commonWords.has(lowerWord) && 
           !seen.has(cleanWord)) {
         
         // Find context snippet (portion of verse containing this word)
-        const wordIndex = verseText.toLowerCase().indexOf(word.toLowerCase());
+        const wordIndex = verseText.toLowerCase().indexOf(lowerWord);
         const contextStart = Math.max(0, wordIndex - 20);
         const contextEnd = Math.min(verseText.length, wordIndex + word.length + 30);
         let snippet = verseText.substring(contextStart, contextEnd);
@@ -772,16 +773,22 @@
       chip.className = 'word-chip';
       chip.dataset.word = suggestion.word;
       
-      chip.innerHTML = `
-        <span class="word-chip-word">${suggestion.word}</span>
-        <span class="word-chip-snippet">"${suggestion.snippet}"</span>
-      `;
+      // Create word and snippet elements safely to avoid XSS
+      const wordSpan = document.createElement('span');
+      wordSpan.className = 'word-chip-word';
+      wordSpan.textContent = suggestion.word;
+      
+      const snippetSpan = document.createElement('span');
+      snippetSpan.className = 'word-chip-snippet';
+      snippetSpan.textContent = `"${suggestion.snippet}"`;
+      
+      chip.appendChild(wordSpan);
+      chip.appendChild(snippetSpan);
       
       chip.addEventListener('click', () => {
         if (!chip.classList.contains('added')) {
           addWordFromSuggestion(suggestion.word);
           chip.classList.add('added');
-          chip.style.pointerEvents = 'none';
         }
       });
       
