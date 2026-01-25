@@ -333,6 +333,53 @@
       text-align: center;
       transition: color 0.3s ease;
     }
+    
+    /* Word Chip Styles */
+    .word-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--accent-color);
+      color: white;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+      user-select: none;
+    }
+
+    .word-chip:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .word-chip-word {
+      font-weight: bold;
+      margin-right: 6px;
+    }
+
+    .word-chip-snippet {
+      font-size: 0.85em;
+      opacity: 0.9;
+      font-style: italic;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .word-chip.added {
+      background: var(--text-secondary);
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .word-chip.added:hover {
+      transform: none;
+    }
   </style>
 </head>
 <body>
@@ -368,6 +415,19 @@
       
       <label for="verseText">Verse Text (auto-populated)</label>
       <textarea id="verseText" readonly placeholder="Select verses above to see text here..."></textarea>
+      
+      <button id="btnSuggestWords" type="button" style="margin-top: 10px;" disabled>
+        💡 Suggest Words from Verses
+      </button>
+
+      <div id="suggestedWordsContainer" style="margin-top: 16px; display: none;">
+        <label style="font-weight: 600; margin-bottom: 8px; display: block;">
+          Suggested Words (click to add):
+        </label>
+        <div id="suggestedWordsChips" style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <!-- Word chips will be inserted here -->
+        </div>
+      </div>
     </fieldset>   
 
     <fieldset>
