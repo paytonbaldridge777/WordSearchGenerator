@@ -633,12 +633,18 @@
       
       if (data.responseStatus === 200 && data.responseData) {
         return data.responseData.translatedText;
+      } else if (data.responseStatus === 403) {
+        console.warn('Translation quota exceeded, using original text');
+        messages.textContent = 'Translation quota exceeded. Showing English text.';
+        return text;
       } else {
         console.warn('Translation failed, using original text');
+        messages.textContent = 'Translation unavailable. Showing English text.';
         return text;
       }
     } catch (error) {
       console.error('Translation error:', error);
+      messages.textContent = 'Translation service unavailable. Showing English text.';
       return text; // Fallback to original text
     }
   }
