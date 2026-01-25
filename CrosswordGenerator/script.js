@@ -739,7 +739,7 @@
       // Update wordCluePairs when clue input changes
       clueInput.addEventListener('input', (e) => {
         const currentIndex = parseInt(e.target.closest('.word-clue-item').dataset.index);
-        wordCluePairs[currentIndex].clue = clueInput.value.trim();
+        wordCluePairs[currentIndex].clue = e.target.value.trim();
       });
       
       // Delete button
@@ -758,8 +758,9 @@
       wordClueList.appendChild(item);
       
       // Focus the clue input if it's empty (newly added from suggestion)
+      // Use setTimeout to ensure DOM is fully updated before focusing
       if (!pair.clue) {
-        setTimeout(() => clueInput.focus(), 100);
+        setTimeout(() => clueInput.focus(), 0);
       }
     });
   }
