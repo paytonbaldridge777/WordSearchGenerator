@@ -722,6 +722,7 @@
       const item = document.createElement('div');
       item.className = 'word-clue-item';
       item.dataset.word = pair.word;
+      item.dataset.index = index;
       
       // Word display (bold, read-only)
       const wordSpan = document.createElement('span');
@@ -734,24 +735,19 @@
       clueInput.className = 'clue-input';
       clueInput.placeholder = `Enter clue for ${pair.word}`;
       clueInput.value = pair.clue;
-      clueInput.style.flex = '1';
-      clueInput.style.marginRight = '8px';
-      clueInput.style.padding = '8px';
-      clueInput.style.border = '1px solid var(--border-secondary)';
-      clueInput.style.borderRadius = '4px';
-      clueInput.style.background = 'var(--bg-primary)';
-      clueInput.style.color = 'var(--text-primary)';
       
       // Update wordCluePairs when clue input changes
-      clueInput.addEventListener('input', () => {
-        wordCluePairs[index].clue = clueInput.value.trim();
+      clueInput.addEventListener('input', (e) => {
+        const currentIndex = parseInt(e.target.closest('.word-clue-item').dataset.index);
+        wordCluePairs[currentIndex].clue = clueInput.value.trim();
       });
       
       // Delete button
       const deleteBtn = document.createElement('button');
       deleteBtn.textContent = 'Delete';
-      deleteBtn.addEventListener('click', () => {
-        removeWordClue(index);
+      deleteBtn.addEventListener('click', (e) => {
+        const currentIndex = parseInt(e.target.closest('.word-clue-item').dataset.index);
+        removeWordClue(currentIndex);
       });
       
       // Assemble the item
