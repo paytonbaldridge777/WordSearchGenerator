@@ -618,7 +618,38 @@
     verseSelect.disabled = false;
   });
 
-  verseSelect.addEventListener("change", () => {
+  // ------------------ Translation Service ------------------
+  async function translateText(text, targetLang) {
+    if (targetLang === 'en' || !text) {
+      return text; // No translation needed for English
+    }
+    
+    try {
+      const encodedText = encodeURIComponent(text);
+      const url = `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|${targetLang}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.responseStatus === 200 && data.responseData) {
+        return data.responseData.translatedText;
+      } else if (data.responseStatus === 403) {
+        console.warn('Translation quota exceeded, using original text');
+        messages.textContent = 'Translation quota exceeded. Showing English text.';
+        return text;
+      } else {
+        console.warn('Translation failed, using original text');
+        messages.textContent = 'Translation unavailable. Showing English text.';
+        return text;
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+      messages.textContent = 'Translation service unavailable. Showing English text.';
+      return text; // Fallback to original text
+    }
+  }
+
+  verseSelect.addEventListener("change", async () => {
     const book    = bookSelect.value;
     const chapter = chapterSelect.value;
     const selectedOptions = Array.from(verseSelect.selectedOptions);
@@ -630,10 +661,46 @@
     const verseTexts = verseNums.map(v => bibleData[book][chapter][v]);
     
     // Concatenate verse texts with single space
-    verseInput.value = verseTexts.join(" ");
+    const originalText = verseTexts.join(" ");
+    
+    // Get selected language
+    const targetLang = el("languageSelect").value;
+    
+    // Translate if needed
+    const translatedText = await translateText(originalText, targetLang);
+    verseInput.value = translatedText;
     
     // Format reference as "Book Chapter:v1,v2,v3"
     refInput.value = `${book} ${chapter}:${verseNums.join(",")}`;
+  });
+
+  // Re-translate verses when language changes
+  const languageSelect = el("languageSelect");
+  languageSelect.addEventListener("change", async () => {
+    const currentVerse = verseInput.value.trim();
+    if (!currentVerse) return; // No verse to translate
+    
+    const book = bookSelect.value;
+    const chapter = chapterSelect.value;
+    const selectedOptions = Array.from(verseSelect.selectedOptions);
+    
+    if (!selectedOptions.length || !book || !chapter) return;
+    
+    // Get original English text from Bible data
+    const verseNums = selectedOptions.map(opt => opt.value);
+    const verseTexts = verseNums.map(v => bibleData[book][chapter][v]);
+    const originalText = verseTexts.join(" ");
+    
+    // Translate to new language
+    const targetLang = languageSelect.value;
+    const translatedText = await translateText(originalText, targetLang);
+    verseInput.value = translatedText;
+    
+    // Update preview if it exists
+    if (lastState) {
+      lastState.verse = translatedText;
+      renderPreview(lastState.title, lastState.grid, translatedText, lastState.reference, lastState.words, lastState.lineSpacing);
+    }
   });
 
   // ------------------ Word search core ------------------
