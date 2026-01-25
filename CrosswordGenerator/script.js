@@ -928,7 +928,16 @@
   // ------------------ Preview Rendering ------------------
   
   function renderPreview(crosswordData, title, reference) {
-    const { grid, acrossClues, downClues } = crosswordData;
+    const { grid, acrossClues: acrossCluesList, downClues: downCluesList } = crosswordData;
+    
+    // Debug logging
+    console.log("Rendering preview with data:", { 
+      hasGrid: !!grid, 
+      acrossCount: acrossCluesList?.length || 0, 
+      downCount: downCluesList?.length || 0 
+    });
+    console.log("Across clues:", acrossCluesList);
+    console.log("Down clues:", downCluesList);
     
     // Show preview container
     previewContainer.style.display = "block";
@@ -978,16 +987,16 @@
     // Render clues
     const clueFont = clueFontInput.value || DEFAULT_CLUE_FONT;
     
-    acrossClues.innerHTML = acrossClues.length > 0
-      ? crosswordData.acrossClues.map(c => 
+    acrossClues.innerHTML = acrossCluesList && acrossCluesList.length > 0
+      ? acrossCluesList.map(c => 
           `<div class="clue-item" style="font-family: ${clueFont}">
             <span class="clue-number">${c.number}.</span>${c.clue}
           </div>`
         ).join("")
       : '<p style="text-align: center; color: var(--text-secondary);">No across clues</p>';
     
-    downClues.innerHTML = downClues.length > 0
-      ? crosswordData.downClues.map(c => 
+    downClues.innerHTML = downCluesList && downCluesList.length > 0
+      ? downCluesList.map(c => 
           `<div class="clue-item" style="font-family: ${clueFont}">
             <span class="clue-number">${c.number}.</span>${c.clue}
           </div>`
