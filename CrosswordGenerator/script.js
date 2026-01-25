@@ -714,13 +714,54 @@
       return;
     }
     
-    wordClueList.innerHTML = wordCluePairs.map((pair, index) => `
-      <div class="word-clue-item">
-        <span class="word">${pair.word}</span>
-        <span class="clue">${pair.clue}</span>
-        <button onclick="window.removeWordClue(${index})">Delete</button>
-      </div>
-    `).join("");
+    // Clear the list
+    wordClueList.innerHTML = '';
+    
+    // Create word-clue items with editable input fields
+    wordCluePairs.forEach((pair, index) => {
+      const item = document.createElement('div');
+      item.className = 'word-clue-item';
+      item.dataset.word = pair.word;
+      item.dataset.index = index;
+      
+      // Word display (bold, read-only)
+      const wordSpan = document.createElement('span');
+      wordSpan.className = 'word';
+      wordSpan.textContent = pair.word;
+      
+      // Clue input field (editable)
+      const clueInput = document.createElement('input');
+      clueInput.type = 'text';
+      clueInput.className = 'clue-input';
+      clueInput.placeholder = `Enter clue for ${pair.word}`;
+      clueInput.value = pair.clue;
+      
+      // Update wordCluePairs when clue input changes
+      clueInput.addEventListener('input', (e) => {
+        const currentIndex = parseInt(e.target.closest('.word-clue-item').dataset.index);
+        wordCluePairs[currentIndex].clue = e.target.value.trim();
+      });
+      
+      // Delete button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', (e) => {
+        const currentIndex = parseInt(e.target.closest('.word-clue-item').dataset.index);
+        removeWordClue(currentIndex);
+      });
+      
+      // Assemble the item
+      item.appendChild(wordSpan);
+      item.appendChild(clueInput);
+      item.appendChild(deleteBtn);
+      
+      wordClueList.appendChild(item);
+      
+      // Focus the clue input if it's empty (newly added from suggestion)
+      if (!pair.clue) {
+        clueInput.focus();
+      }
+    });
   }
 
   // Make removeWordClue globally accessible for inline onclick
@@ -1339,6 +1380,14 @@
       
       if (wordCluePairs.length === 0) {
         messages.textContent = "Please add at least one word/clue pair.";
+        return;
+      }
+      
+      // Check for words without clues
+      const wordsWithoutClues = wordCluePairs.filter(pair => !pair.clue || pair.clue.trim() === '');
+      if (wordsWithoutClues.length > 0) {
+        const wordList = wordsWithoutClues.map(pair => pair.word).join(', ');
+        messages.textContent = `Please add clues for: ${wordList}`;
         return;
       }
       
