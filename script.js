@@ -139,6 +139,18 @@
   const previewVerse= el("previewVerse");
   const previewRef  = el("previewReference");
 
+  // Common words to filter out from word suggestions
+  const COMMON_WORDS = new Set([
+    'a', 'an', 'the', 'and', 'or', 'but', 'of', 'to', 'in', 'is', 'was', 
+    'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
+    'will', 'would', 'should', 'could', 'may', 'might', 'can', 'shall', 
+    'am', 'are', 'for', 'with', 'at', 'by', 'from', 'as', 'on', 'it',
+    'he', 'she', 'they', 'them', 'his', 'her', 'their', 'this', 'that',
+    'these', 'those', 'not', 'no', 'yes', 'if', 'then', 'than', 'all',
+    'any', 'some', 'my', 'me', 'you', 'your', 'we', 'us', 'our', 'him',
+    'into', 'up', 'out', 'who', 'what', 'when', 'where', 'which', 'why', 'how'
+  ]);
+
   // ------------------ Bible version loader ------------------
   let bibleData = {};
   const versionSelect = el("versionSelect");
@@ -715,18 +727,6 @@
 
   // ------------------ Word Suggestion Feature ------------------
   function extractSuggestedWords(verseText) {
-    // Common words to filter out
-    const commonWords = new Set([
-      'a', 'an', 'the', 'and', 'or', 'but', 'of', 'to', 'in', 'is', 'was', 
-      'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
-      'will', 'would', 'should', 'could', 'may', 'might', 'can', 'shall', 
-      'am', 'are', 'for', 'with', 'at', 'by', 'from', 'as', 'on', 'it',
-      'he', 'she', 'they', 'them', 'his', 'her', 'their', 'this', 'that',
-      'these', 'those', 'not', 'no', 'yes', 'if', 'then', 'than', 'all',
-      'any', 'some', 'my', 'me', 'you', 'your', 'we', 'us', 'our', 'him',
-      'into', 'up', 'out', 'who', 'what', 'when', 'where', 'which', 'why', 'how'
-    ]);
-    
     // Extract words
     const words = verseText.match(/[a-zA-Z]+/g) || [];
     const suggestions = [];
@@ -737,7 +737,7 @@
       
       // Filter: must be 4+ letters, not common, not duplicate
       if (cleanWord.length >= 4 && 
-          !commonWords.has(word.toLowerCase()) && 
+          !COMMON_WORDS.has(word.toLowerCase()) && 
           !seen.has(cleanWord)) {
         
         suggestions.push({
@@ -1169,13 +1169,15 @@
   function addWordFromSuggestion(word) {
     const currentWords = wordsInput.value.trim();
     
-    // Check if word already exists
-    const existingWords = currentWords
-      .split(/[\n,]+/)
-      .map(w => w.trim().toUpperCase())
-      .filter(w => w.length > 0);
+    // Check if word already exists - use Set for O(1) lookup performance
+    const existingWordsSet = new Set(
+      currentWords
+        .split(/[\n,]+/)
+        .map(w => w.trim().toUpperCase())
+        .filter(w => w.length > 0)
+    );
     
-    if (existingWords.includes(word)) {
+    if (existingWordsSet.has(word)) {
       messages.textContent = `"${word}" is already in your word list`;
       messages.style.color = 'orange';
       setTimeout(() => { messages.textContent = ''; }, 3000);
