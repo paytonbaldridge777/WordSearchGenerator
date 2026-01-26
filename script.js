@@ -132,6 +132,8 @@
   const btnSuggestWords = el("btnSuggestWords");
   const suggestedWordsContainer = el("suggestedWordsContainer");
   const suggestedWordsChips = el("suggestedWordsChips");
+  const btnClearTargetWords = el("btnClearTargetWords");
+  const btnClearSuggestedWords = el("btnClearSuggestedWords");
 
   const messages    = el("messages");
   const previewTitle= el("previewTitle");
@@ -1201,6 +1203,19 @@
     setTimeout(() => { messages.textContent = ''; }, 2000);
   }
 
+  // Clear Target Words button
+  btnClearTargetWords.addEventListener("click", () => {
+    wordsInput.value = "";
+    messages.textContent = "";
+  });
+
+  // Clear Suggested Words button
+  btnClearSuggestedWords.addEventListener("click", () => {
+    suggestedWordsContainer.style.display = "none";
+    suggestedWordsChips.innerHTML = "";
+    messages.textContent = "";
+  });
+
   btnClear.addEventListener("click", () => {
     titleInput.value = verseInput.value = wordsInput.value = refInput.value = "";
     previewGrid.innerHTML = "";
@@ -1208,6 +1223,8 @@
     previewVerse.textContent = "";
     previewRef.textContent = "";
     messages.textContent = "";
+    suggestedWordsContainer.style.display = "none";
+    suggestedWordsChips.innerHTML = "";
     btnExport.disabled = true;
     lastState = null;
   });

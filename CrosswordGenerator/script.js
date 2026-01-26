@@ -92,6 +92,7 @@
   const btnSuggestWords = el("btnSuggestWords");
   const suggestedWordsContainer = el("suggestedWordsContainer");
   const suggestedWordsChips = el("suggestedWordsChips");
+  const btnClearSuggestedWords = el("btnClearSuggestedWords");
 
   const titleFontInput = el("titleFont");
   const gridFontInput = el("gridFont");
@@ -1434,6 +1435,13 @@
       console.error("Error exporting PDFs:", error);
       messages.textContent = `Export error: ${error.message}`;
     }
+  });
+
+  // Clear Suggested Words button
+  btnClearSuggestedWords.addEventListener("click", () => {
+    suggestedWordsContainer.style.display = "none";
+    suggestedWordsChips.innerHTML = "";
+    messages.textContent = "";
   });
 
   btnClear.addEventListener("click", () => {

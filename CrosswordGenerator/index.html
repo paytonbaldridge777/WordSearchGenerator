@@ -439,14 +439,19 @@
       </button>
 
       <div id="suggestedWordsContainer" style="margin-top: 16px; display: none;">
-        <label style="font-weight: 600; margin-bottom: 8px; display: block;">
-          Suggested Words (click to add):
-        </label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <label style="font-weight: 600; margin: 0;">
+            Suggested Words (click to add):
+          </label>
+          <button id="btnClearSuggestedWords" type="button" class="secondary" style="margin: 0; padding: 6px 12px; font-size: 0.85rem; width: auto;">
+            Clear Suggestions
+          </button>
+        </div>
         <div id="suggestedWordsChips" style="display: flex; flex-wrap: wrap; gap: 8px;">
           <!-- Word chips will be inserted here -->
         </div>
       </div>
-    </fieldset>   
+    </fieldset>
 
     <fieldset>
       <legend>Word/Clue Entry</legend>
