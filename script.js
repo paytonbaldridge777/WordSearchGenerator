@@ -128,11 +128,28 @@
   const btnExport   = el("btnExport");
   const btnClear    = el("btnClear");
 
+  // Word suggestion elements
+  const btnSuggestWords = el("btnSuggestWords");
+  const suggestedWordsContainer = el("suggestedWordsContainer");
+  const suggestedWordsChips = el("suggestedWordsChips");
+
   const messages    = el("messages");
   const previewTitle= el("previewTitle");
   const previewGrid = el("previewGrid");
   const previewVerse= el("previewVerse");
   const previewRef  = el("previewReference");
+
+  // Common words to filter out from word suggestions
+  const COMMON_WORDS = new Set([
+    'a', 'an', 'the', 'and', 'or', 'but', 'of', 'to', 'in', 'is', 'was', 
+    'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
+    'will', 'would', 'should', 'could', 'may', 'might', 'can', 'shall', 
+    'am', 'are', 'for', 'with', 'at', 'by', 'from', 'as', 'on', 'it',
+    'he', 'she', 'they', 'them', 'his', 'her', 'their', 'this', 'that',
+    'these', 'those', 'not', 'no', 'yes', 'if', 'then', 'than', 'all',
+    'any', 'some', 'my', 'me', 'you', 'your', 'we', 'us', 'our', 'him',
+    'into', 'up', 'out', 'who', 'what', 'when', 'where', 'which', 'why', 'how'
+  ]);
 
   // ------------------ Bible version loader ------------------
   let bibleData = {};
@@ -670,6 +687,11 @@
     const translatedText = await translateText(originalText, targetLang);
     verseInput.value = translatedText;
     
+    // Enable "Suggest Words" button when verse text is populated
+    if (btnSuggestWords) {
+      btnSuggestWords.disabled = false;
+    }
+    
     // Format reference as "Book Chapter:v1,v2,v3"
     refInput.value = `${book} ${chapter}:${verseNums.join(",")}`;
   });
@@ -702,6 +724,35 @@
       renderPreview(lastState.title, lastState.grid, translatedText, lastState.reference, lastState.words, lastState.lineSpacing);
     }
   });
+
+  // ------------------ Word Suggestion Feature ------------------
+  function extractSuggestedWords(verseText) {
+    // Extract words
+    const words = verseText.match(/[a-zA-Z]+/g) || [];
+    const suggestions = [];
+    const seen = new Set();
+    
+    for (const word of words) {
+      const cleanWord = word.toUpperCase();
+      
+      // Filter: must be 4+ letters, not common, not duplicate
+      if (cleanWord.length >= 4 && 
+          !COMMON_WORDS.has(word.toLowerCase()) && 
+          !seen.has(cleanWord)) {
+        
+        suggestions.push({
+          word: cleanWord
+        });
+        
+        seen.add(cleanWord);
+      }
+    }
+    
+    // Sort by length (longest first)
+    suggestions.sort((a, b) => b.word.length - a.word.length);
+    
+    return suggestions;
+  }
 
   // ------------------ Word search core ------------------
   const sanitizeWord = (w) => w.toUpperCase().replace(/[^A-Z]/g, "").trim();
@@ -1061,6 +1112,94 @@
     if (!lastState) { alert("Generate a puzzle first!"); return; }
     exportPDFs(lastState);
   });
+
+  // ------------------ Word Suggestion Event Handlers ------------------
+  // Enable "Suggest Words" button when verse text is available
+  if (verseInput && btnSuggestWords) {
+    verseInput.addEventListener('input', () => {
+      const hasText = verseInput.value.trim().length > 0;
+      btnSuggestWords.disabled = !hasText;
+    });
+  }
+
+  // Handle "Suggest Words" button click
+  if (btnSuggestWords) {
+    btnSuggestWords.addEventListener('click', () => {
+      const verseText = verseInput.value.trim();
+      if (!verseText) return;
+      
+      // Extract suggestions
+      const suggestions = extractSuggestedWords(verseText);
+      
+      if (suggestions.length === 0) {
+        messages.textContent = 'No significant words found in verses (need 4+ letter words)';
+        return;
+      }
+      
+      // Clear previous suggestions
+      suggestedWordsChips.innerHTML = '';
+      
+      // Create word chips (simplified - no snippet)
+      suggestions.forEach(suggestion => {
+        const chip = document.createElement('div');
+        chip.className = 'word-chip';
+        chip.dataset.word = suggestion.word;
+        chip.textContent = suggestion.word;
+        
+        chip.addEventListener('click', () => {
+          if (!chip.classList.contains('added')) {
+            addWordFromSuggestion(suggestion.word);
+            chip.classList.add('added');
+          }
+        });
+        
+        suggestedWordsChips.appendChild(chip);
+      });
+      
+      // Show suggestions container
+      suggestedWordsContainer.style.display = 'block';
+      
+      messages.textContent = `Found ${suggestions.length} suggested words - click to add`;
+      messages.style.color = 'green';
+      setTimeout(() => { messages.textContent = ''; }, 5000);
+    });
+  }
+
+  // Function to add word from suggestion to words textarea
+  function addWordFromSuggestion(word) {
+    const currentWords = wordsInput.value.trim();
+    
+    // Check if word already exists - use Set for O(1) lookup performance
+    const existingWordsSet = new Set(
+      currentWords
+        .split(/[\n,]+/)
+        .map(w => w.trim().toUpperCase())
+        .filter(w => w.length > 0)
+    );
+    
+    if (existingWordsSet.has(word)) {
+      messages.textContent = `"${word}" is already in your word list`;
+      messages.style.color = 'orange';
+      setTimeout(() => { messages.textContent = ''; }, 3000);
+      return;
+    }
+    
+    // Add word to textarea (comma-separated or new line)
+    if (currentWords.length > 0) {
+      // Add comma if last character isn't comma or newline
+      if (!currentWords.endsWith(',') && !currentWords.endsWith('\n')) {
+        wordsInput.value += ', ';
+      } else if (currentWords.endsWith(',')) {
+        wordsInput.value += ' ';
+      }
+    }
+    
+    wordsInput.value += word;
+    
+    messages.textContent = `Added "${word}" to word list`;
+    messages.style.color = 'green';
+    setTimeout(() => { messages.textContent = ''; }, 2000);
+  }
 
   btnClear.addEventListener("click", () => {
     titleInput.value = verseInput.value = wordsInput.value = refInput.value = "";
