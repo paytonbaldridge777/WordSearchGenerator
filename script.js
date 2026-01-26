@@ -675,6 +675,11 @@
     const translatedText = await translateText(originalText, targetLang);
     verseInput.value = translatedText;
     
+    // Enable "Suggest Words" button when verse text is populated
+    if (btnSuggestWords) {
+      btnSuggestWords.disabled = false;
+    }
+    
     // Format reference as "Book Chapter:v1,v2,v3"
     refInput.value = `${book} ${chapter}:${verseNums.join(",")}`;
   });
