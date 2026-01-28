@@ -809,7 +809,7 @@
     let space = 0;
     let rr = r, cc = c;
     while (rr >= 0 && rr < height && cc >= 0 && cc < width) {
-      if (grid[rr] && grid[rr][cc]) break;
+      if (grid[rr][cc]) break; // Cell is occupied
       space++;
       rr += dy;
       cc += dx;
@@ -854,7 +854,7 @@
   }
 
   // Try smart random placement prioritizing areas with more space
-  function trySmartRandomPlacement(grid, word, width, height, dirs, maxTries) {
+  function trySmartRandomPlacement(grid, word, width, height, dirs, maxTries, placed) {
     // Build a list of positions with their available space scores
     const positions = [];
     for (let r = 0; r < height; r++) {
@@ -890,7 +890,8 @@
           grid[rr][cc] = word[i];
           cells.push({ r: rr, c: cc });
         }
-        return { cells };
+        placed.push({ word, cells });
+        return true;
       }
     }
     return false;
@@ -922,11 +923,7 @@
 
       // Fall back to smart random placement
       if (!done) {
-        const result = trySmartRandomPlacement(grid, w, width, height, dirs, 300);
-        if (result) {
-          placed.push({ word: w, cells: result.cells });
-          done = true;
-        }
+        done = trySmartRandomPlacement(grid, w, width, height, dirs, 300, placed);
       }
 
       // Track failed words
@@ -1228,7 +1225,7 @@
     renderPreview(title, grid, verse, reference, words, lineSpacing);
     
     // Check if any words failed to place and notify user
-    if (failed && failed.length > 0) {
+    if (failed.length > 0) {
       const failedList = failed.join(", ");
       messages.textContent = `⚠️ Warning: The following words could not be placed: ${failedList}. Try increasing the puzzle size or removing some words.`;
       messages.style.color = "var(--error-text)";
