@@ -723,7 +723,8 @@
     // Update preview if it exists
     if (lastState) {
       lastState.verse = translatedText;
-      renderPreview(lastState.title, lastState.grid, translatedText, lastState.reference, lastState.words, lastState.lineSpacing);
+      const placedWords = lastState.placed.map(p => p.word);
+      renderPreview(lastState.title, lastState.grid, translatedText, lastState.reference, lastState.lineSpacing, placedWords);
     }
   });
 
@@ -942,7 +943,7 @@
   }
 
   // ------------------ Preview ------------------
-  function renderPreview(title, grid, verse, reference, words, lineSpacing) {
+  function renderPreview(title, grid, verse, reference, lineSpacing, placedWords) {
     // Get selected fonts with fallback to defaults
     const titleFont = titleFontInput?.value || DEFAULT_TITLE_FONT;
     const puzzleFont = puzzleFontInput?.value || DEFAULT_PUZZLE_FONT;
@@ -966,10 +967,12 @@
     }
 
     // Bold + underline first occurrence of each target word in the verse
+    // BUT only for words that were successfully placed
+    const placedWordSet = new Set(placedWords || []);
     const used = new Set();
     previewVerse.innerHTML = verse.split(/\b/).map(tok => {
       const up = tok.toUpperCase().replace(/[^A-Z]/g, "");
-      if (words.includes(up) && !used.has(up)) {
+      if (placedWordSet.has(up) && !used.has(up)) {
         used.add(up);
         return `<span style="font-weight:bold;text-decoration:underline">${tok}</span>`;
       }
@@ -1102,6 +1105,8 @@
       doc.setFontSize(verseFontSize);
 
       // Bold + underline the first occurrence of each target word
+      // BUT only for words that were successfully placed
+      const placedWordSet = new Set(placed.map(p => p.word));
       const used = new Set();
       const tokens = (opts.verse || "").split(/\s+/);
       let line = [], lineW = 0;
@@ -1125,7 +1130,7 @@
 
       for (const raw of tokens) {
         const up = raw.toUpperCase().replace(/[^A-Z]/g, "");
-        const bold = opts.words?.includes(up) && !used.has(up);
+        const bold = placedWordSet.has(up) && !used.has(up);
         if (bold) used.add(up);
         const w = doc.getTextWidth(raw + " ");
         if (lineW + w > maxW) flushLine();
@@ -1222,7 +1227,8 @@
     if (!words.length){ messages.textContent = "Please provide at least one target word."; return; }
 
     const { grid, placed, failed } = generateGrid(words, size, size);
-    renderPreview(title, grid, verse, reference, words, lineSpacing);
+    const placedWords = placed.map(p => p.word);
+    renderPreview(title, grid, verse, reference, lineSpacing, placedWords);
     
     // Check if any words failed to place and notify user
     if (failed.length > 0) {
