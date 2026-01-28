@@ -771,6 +771,8 @@
     const width = grid[0]?.length || 0;
     const endR = r + dy * (word.length - 1);
     const endC = c + dx * (word.length - 1);
+    // Check both start and end positions are within bounds
+    if (r < 0 || r >= height || c < 0 || c >= width) return false;
     if (endR < 0 || endR >= height || endC < 0 || endC >= width) return false;
     for (let i = 0; i < word.length; i++) {
       const rr = r + dy * i, cc = c + dx * i;
@@ -806,7 +808,8 @@
     const width = grid[0]?.length || 0;
     let space = 0;
     let rr = r, cc = c;
-    while (rr >= 0 && rr < height && cc >= 0 && cc < width && !grid[rr][cc]) {
+    while (rr >= 0 && rr < height && cc >= 0 && cc < width) {
+      if (grid[rr] && grid[rr][cc]) break;
       space++;
       rr += dy;
       cc += dx;
