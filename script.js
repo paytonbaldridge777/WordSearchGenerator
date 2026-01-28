@@ -780,9 +780,123 @@
     return true;
   }
 
+  // Helper function to find common letters between a word and placed words
+  function findCommonLetters(word, placedWords) {
+    const intersections = [];
+    for (const placed of placedWords) {
+      for (let i = 0; i < word.length; i++) {
+        for (let j = 0; j < placed.word.length; j++) {
+          if (word[i] === placed.word[j]) {
+            intersections.push({
+              wordIdx: i,
+              placedWord: placed.word,
+              placedIdx: j,
+              cell: placed.cells[j]
+            });
+          }
+        }
+      }
+    }
+    return intersections;
+  }
+
+  // Helper function to get available space in a direction from a position
+  function getAvailableSpace(grid, r, c, dx, dy) {
+    const height = grid.length;
+    const width = grid[0]?.length || 0;
+    let space = 0;
+    let rr = r, cc = c;
+    while (rr >= 0 && rr < height && cc >= 0 && cc < width && !grid[rr][cc]) {
+      space++;
+      rr += dy;
+      cc += dx;
+    }
+    return space;
+  }
+
+  // Try to place word by intersecting with already placed words
+  function tryIntersectionPlacement(grid, word, placed, dirs) {
+    const intersections = findCommonLetters(word, placed);
+    if (intersections.length === 0) return false;
+
+    // Shuffle intersections for randomness
+    for (let i = intersections.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [intersections[i], intersections[j]] = [intersections[j], intersections[i]];
+    }
+
+    // Try each intersection point
+    for (const inter of intersections) {
+      const { wordIdx, cell } = inter;
+      
+      // Try each direction
+      for (const d of dirs) {
+        // Calculate starting position based on intersection
+        const r = cell.r - d.dy * wordIdx;
+        const c = cell.c - d.dx * wordIdx;
+        
+        if (canPlace(grid, word, r, c, d.dx, d.dy)) {
+          const cells = [];
+          for (let i = 0; i < word.length; i++) {
+            const rr = r + d.dy * i, cc = c + d.dx * i;
+            grid[rr][cc] = word[i];
+            cells.push({ r: rr, c: cc });
+          }
+          placed.push({ word, cells });
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // Try smart random placement prioritizing areas with more space
+  function trySmartRandomPlacement(grid, word, width, height, dirs, maxTries) {
+    // Build a list of positions with their available space scores
+    const positions = [];
+    for (let r = 0; r < height; r++) {
+      for (let c = 0; c < width; c++) {
+        let score = 0;
+        for (const d of dirs) {
+          const space = getAvailableSpace(grid, r, c, d.dx, d.dy);
+          if (space >= word.length) score += space;
+        }
+        if (score > 0) {
+          positions.push({ r, c, score });
+        }
+      }
+    }
+
+    if (positions.length === 0) return false;
+
+    // Sort by score (higher is better) but add some randomness
+    positions.sort((a, b) => b.score - a.score);
+
+    // Try positions, biased toward higher scores
+    const tries = Math.min(maxTries, positions.length * dirs.length);
+    for (let attempt = 0; attempt < tries; attempt++) {
+      // Use weighted random selection favoring higher scores
+      const idx = Math.floor(Math.pow(Math.random(), 2) * Math.min(positions.length, 50));
+      const pos = positions[idx];
+      const d = dirs[Math.floor(Math.random() * dirs.length)];
+      
+      if (canPlace(grid, word, pos.r, pos.c, d.dx, d.dy)) {
+        const cells = [];
+        for (let i = 0; i < word.length; i++) {
+          const rr = pos.r + d.dy * i, cc = pos.c + d.dx * i;
+          grid[rr][cc] = word[i];
+          cells.push({ r: rr, c: cc });
+        }
+        return { cells };
+      }
+    }
+    return false;
+  }
+
   function generateGrid(words, width = 14, height = 12) {
     const grid   = Array.from({ length: height }, () => Array(width).fill(null));
     const placed = []; // { word, cells:[{r,c}] }
+    const failed = []; // words that couldn't be placed
     const dirs = [
       {dx:1,dy:0},{dx:0,dy:1},{dx:1,dy:1},
       {dx:-1,dy:0},{dx:0,dy:-1},{dx:-1,dy:-1},
@@ -790,21 +904,31 @@
     ];
 
     for (const w of words) {
-      if (w.length > Math.max(width, height)) continue;
+      // Check if word is too long for grid
+      if (w.length > Math.max(width, height)) {
+        failed.push(w);
+        continue;
+      }
+
       let done = false;
-      for (let tries = 0; tries < 500 && !done; tries++) {
-        const d = dirs[Math.floor(Math.random() * dirs.length)];
-        const r = Math.floor(Math.random() * height);
-        const c = Math.floor(Math.random() * width);
-        if (!canPlace(grid, w, r, c, d.dx, d.dy)) continue;
-        const cells = [];
-        for (let i = 0; i < w.length; i++) {
-          const rr = r + d.dy * i, cc = c + d.dx * i;
-          grid[rr][cc] = w[i];
-          cells.push({ r: rr, c: cc });
+
+      // Try intersection-based placement first (after first word)
+      if (placed.length > 0) {
+        done = tryIntersectionPlacement(grid, w, placed, dirs);
+      }
+
+      // Fall back to smart random placement
+      if (!done) {
+        const result = trySmartRandomPlacement(grid, w, width, height, dirs, 300);
+        if (result) {
+          placed.push({ word: w, cells: result.cells });
+          done = true;
         }
-        placed.push({ word: w, cells });
-        done = true;
+      }
+
+      // Track failed words
+      if (!done) {
+        failed.push(w);
       }
     }
 
@@ -814,7 +938,7 @@
         if (!grid[r][c]) grid[r][c] = ALPH[Math.floor(Math.random() * ALPH.length)];
       }
     }
-    return { grid, placed };
+    return { grid, placed, failed };
   }
 
   // ------------------ Preview ------------------
@@ -1097,9 +1221,19 @@
     if (!verse)       { messages.textContent = "Please paste or select a verse."; return; }
     if (!words.length){ messages.textContent = "Please provide at least one target word."; return; }
 
-    const { grid, placed } = generateGrid(words, size, size);
+    const { grid, placed, failed } = generateGrid(words, size, size);
     renderPreview(title, grid, verse, reference, words, lineSpacing);
-    messages.textContent = "Preview generated successfully.";
+    
+    // Check if any words failed to place and notify user
+    if (failed && failed.length > 0) {
+      const failedList = failed.join(", ");
+      messages.textContent = `⚠️ Warning: The following words could not be placed: ${failedList}. Try increasing the puzzle size or removing some words.`;
+      messages.style.color = "var(--error-text)";
+    } else {
+      messages.textContent = "Preview generated successfully.";
+      messages.style.color = "var(--text-primary)";
+    }
+    
     btnExport.disabled = false;
 
     lastState = { 
