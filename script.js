@@ -723,7 +723,8 @@
     // Update preview if it exists
     if (lastState) {
       lastState.verse = translatedText;
-      renderPreview(lastState.title, lastState.grid, translatedText, lastState.reference, lastState.words, lastState.lineSpacing);
+      const placedWords = lastState.placed.map(p => p.word);
+      renderPreview(lastState.title, lastState.grid, translatedText, lastState.reference, lastState.lineSpacing, placedWords);
     }
   });
 
@@ -942,7 +943,7 @@
   }
 
   // ------------------ Preview ------------------
-  function renderPreview(title, grid, verse, reference, words, lineSpacing, placedWords) {
+  function renderPreview(title, grid, verse, reference, lineSpacing, placedWords) {
     // Get selected fonts with fallback to defaults
     const titleFont = titleFontInput?.value || DEFAULT_TITLE_FONT;
     const puzzleFont = puzzleFontInput?.value || DEFAULT_PUZZLE_FONT;
@@ -1227,7 +1228,7 @@
 
     const { grid, placed, failed } = generateGrid(words, size, size);
     const placedWords = placed.map(p => p.word);
-    renderPreview(title, grid, verse, reference, words, lineSpacing, placedWords);
+    renderPreview(title, grid, verse, reference, lineSpacing, placedWords);
     
     // Check if any words failed to place and notify user
     if (failed.length > 0) {
