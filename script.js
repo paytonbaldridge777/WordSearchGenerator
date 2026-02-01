@@ -1050,8 +1050,8 @@
     // Solution highlights - draw rounded rectangles around each solution word
     if (withHighlights && placed?.length) {
       // Configurable colors and radius for easy tuning
-      const rectFillColor = { r: 200, g: 200, b: 200, a: 0.4 };  // Semi-transparent light grey fill
-      const rectBorderColor = { r: 120, g: 120, b: 120, a: 0.7 }; // Semi-transparent darker grey border
+      const rectFillColor = { r: 200, g: 200, b: 200 };  // Light grey fill (simulates semi-transparency)
+      const rectBorderColor = { r: 120, g: 120, b: 120 }; // Darker grey border (simulates semi-transparency)
       const cornerRadius = 0.08; // Rounded corner radius in inches
       const padding = 0.05; // Padding around word in inches
       
@@ -1064,16 +1064,16 @@
         const endCell = p.cells[p.cells.length - 1];
         
         // Calculate rectangle bounds
-        const minR = Math.min(startCell.r, endCell.r);
-        const maxR = Math.max(startCell.r, endCell.r);
-        const minC = Math.min(startCell.c, endCell.c);
-        const maxC = Math.max(startCell.c, endCell.c);
+        const minRow = Math.min(startCell.r, endCell.r);
+        const maxRow = Math.max(startCell.r, endCell.r);
+        const minCol = Math.min(startCell.c, endCell.c);
+        const maxCol = Math.max(startCell.c, endCell.c);
         
         // Calculate rectangle position and size
-        const rectX = gridX + minC * cellSize - padding;
-        const rectY = gridY + minR * cellSize - padding;
-        const rectW = (maxC - minC + 1) * cellSize + 2 * padding;
-        const rectH = (maxR - minR + 1) * cellSize + 2 * padding;
+        const rectX = gridX + minCol * cellSize - padding;
+        const rectY = gridY + minRow * cellSize - padding;
+        const rectW = (maxCol - minCol + 1) * cellSize + 2 * padding;
+        const rectH = (maxRow - minRow + 1) * cellSize + 2 * padding;
         
         // Draw rounded rectangle with semi-transparent fill
         // jsPDF doesn't support alpha transparency directly, so we'll use a fallback approach
