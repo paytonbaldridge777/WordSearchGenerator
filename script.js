@@ -1047,7 +1047,49 @@
     //  doc.line(gridX, gridY + i * cellSize, gridX + gridW, gridY + i * cellSize);         // horizontal
     //}
 
-    // Solution highlights - removed cell background fill
+    // Solution highlights - draw rounded rectangles around each solution word
+    if (withHighlights && placed?.length) {
+      // Configurable colors and radius for easy tuning
+      const rectFillColor = { r: 200, g: 200, b: 200 };  // Light grey fill (simulates semi-transparency)
+      const rectBorderColor = { r: 120, g: 120, b: 120 }; // Darker grey border (simulates semi-transparency)
+      const cornerRadius = 0.08; // Rounded corner radius in inches
+      const padding = 0.05; // Padding around word in inches
+      
+      // Draw a rounded rectangle for each placed word
+      for (const p of placed) {
+        if (!p.cells || p.cells.length === 0) continue;
+        
+        // Get start and end cells
+        const startCell = p.cells[0];
+        const endCell = p.cells[p.cells.length - 1];
+        
+        // Calculate rectangle bounds
+        const minRow = Math.min(startCell.r, endCell.r);
+        const maxRow = Math.max(startCell.r, endCell.r);
+        const minCol = Math.min(startCell.c, endCell.c);
+        const maxCol = Math.max(startCell.c, endCell.c);
+        
+        // Calculate rectangle position and size
+        const rectX = gridX + minCol * cellSize - padding;
+        const rectY = gridY + minRow * cellSize - padding;
+        const rectW = (maxCol - minCol + 1) * cellSize + 2 * padding;
+        const rectH = (maxRow - minRow + 1) * cellSize + 2 * padding;
+        
+        // Draw rounded rectangle with semi-transparent fill
+        // jsPDF doesn't support alpha transparency directly, so we'll use a fallback approach
+        // by setting fill and stroke colors without alpha (using lighter colors to simulate transparency)
+        
+        // Set fill color (lighter grey to simulate semi-transparency)
+        doc.setFillColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
+        
+        // Set border color (slightly darker grey)
+        doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);
+        doc.setLineWidth(0.01);
+        
+        // Draw the rounded rectangle
+        doc.roundedRect(rectX, rectY, rectW, rectH, cornerRadius, cornerRadius, 'FD'); // 'FD' = Fill and Draw (stroke)
+      }
+    }
 
     // Letters - use configured font size or auto-calculate based on cell size
     const letterSizePercent = (opts.puzzleLetterFontSize && opts.puzzleLetterFontSize > 0) 
