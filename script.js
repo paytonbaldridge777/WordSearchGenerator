@@ -1104,9 +1104,10 @@
           const centerX = gridX + centerCol * cellSize + cellSize / 2;
           const centerY = gridY + centerRow * cellSize + cellSize / 2;
           
-          // Calculate the length of the diagonal (number of cells * cell size)
-          const diagLength = Math.sqrt(dr * dr + dc * dc) * cellSize;
-          const rectW = diagLength + cellSize + 2 * padding;
+          // Calculate the length of the rectangle
+          // For a diagonal word, the rectangle should span the same number of cells as the word length
+          // measured along the diagonal direction
+          const rectW = wordLength * cellSize + 2 * padding;
           const rectH = cellSize + 2 * padding;
           
           // Draw rotated rectangle using a polygon approach
