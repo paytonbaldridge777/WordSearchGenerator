@@ -1085,7 +1085,7 @@
       // Calculation: bar runs from (firstCellCenter - barExtension) to (lastCellCenter + barExtension)
       // With barExtension = cellSize/2, this means bar runs from edge to edge of cells
       const barExtension = cellSize / 2;
-      const diagonalBarExtension = cellSize / 3.5;  // Shorter for diagonals only
+      const diagonalBarExtension = cellSize / 6.5;  // Shorter for diagonals only
 
       
       // Bar thickness (in inches)
@@ -1518,6 +1518,7 @@
     lastState = null;
   });
 })();
+
 
 
 
