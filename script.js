@@ -1047,15 +1047,37 @@
     //  doc.line(gridX, gridY + i * cellSize, gridX + gridW, gridY + i * cellSize);         // horizontal
     //}
 
-    // Solution highlights - draw rounded rectangles around each solution word
+    // Solution highlights - draw tightly fitted capsule-style rounded rectangles for each word
     if (withHighlights && placed?.length) {
-      // Configurable colors and radius for easy tuning
-      const rectFillColor = { r: 200, g: 200, b: 200 };  // Light grey fill (simulates semi-transparency)
-      const rectBorderColor = { r: 120, g: 120, b: 120 }; // Darker grey border (simulates semi-transparency)
-      const cornerRadius = 0.08; // Rounded corner radius in inches
-      const padding = 0.05; // Padding around word in inches
+      // ==================== TUNABLE PARAMETERS ====================
+      // These parameters control the appearance of the word highlight capsules
       
-      // Draw a rounded rectangle for each placed word independently
+      // Bar colors (RGB 0-255)
+      const rectFillColor = { r: 200, g: 200, b: 200 };     // Light grey fill (semi-transparent appearance)
+      const rectBorderColor = { r: 120, g: 120, b: 120 };   // Darker grey border for definition
+      
+      // Corner radius for capsule ends (in inches)
+      // Should be approximately cellSize/2 for perfect semicircle ends
+      const cornerRadius = cellSize / 2;
+      
+      // Bar extension beyond cell centers (in inches)
+      // This ensures the bar covers the ENTIRE first and last letter cell
+      // Value of cellSize/2 means bar extends from edge to edge of cells
+      const barExtension = cellSize / 2;
+      
+      // Bar thickness (in inches)
+      // Set to exactly cellSize for flush alignment with grid cells
+      // This ensures no gaps between adjacent parallel words
+      const barThickness = cellSize;
+      
+      // Border width (in inches)
+      const borderWidth = 0.01;
+      
+      // ============================================================
+      
+      doc.setLineWidth(borderWidth);
+      
+      // Draw a capsule-shaped bar for each placed word independently
       for (const p of placed) {
         if (!p.cells || p.cells.length === 0) continue;
         
@@ -1074,51 +1096,74 @@
         
         doc.setFillColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
         doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);
-        doc.setLineWidth(0.01);
         
-        // For horizontal and vertical words, draw a simple capsule-shaped rectangle
+        // For horizontal and vertical words, draw a simple capsule using roundedRect
         if (isHorizontal) {
-          // Horizontal word
-          const rectX = gridX + Math.min(startCell.c, endCell.c) * cellSize - padding;
-          const rectY = gridY + startCell.r * cellSize - padding;
-          const rectW = wordLength * cellSize + 2 * padding;
-          const rectH = cellSize + 2 * padding;
+          // Horizontal word capsule
+          // Start from center of first cell, extend to center of last cell, then add extensions
+          const startCellCenterX = gridX + startCell.c * cellSize + cellSize / 2;
+          const endCellCenterX = gridX + endCell.c * cellSize + cellSize / 2;
+          const rowCenterY = gridY + startCell.r * cellSize + cellSize / 2;
+          
+          // Calculate bar position: extend from barExtension before first center to barExtension after last center
+          const rectX = Math.min(startCellCenterX, endCellCenterX) - barExtension;
+          const rectY = rowCenterY - barThickness / 2;
+          const rectW = Math.abs(endCellCenterX - startCellCenterX) + 2 * barExtension;
+          const rectH = barThickness;
           
           doc.roundedRect(rectX, rectY, rectW, rectH, cornerRadius, cornerRadius, 'FD');
         } else if (isVertical) {
-          // Vertical word
-          const rectX = gridX + startCell.c * cellSize - padding;
-          const rectY = gridY + Math.min(startCell.r, endCell.r) * cellSize - padding;
-          const rectW = cellSize + 2 * padding;
-          const rectH = wordLength * cellSize + 2 * padding;
+          // Vertical word capsule
+          // Start from center of first cell, extend to center of last cell, then add extensions
+          const colCenterX = gridX + startCell.c * cellSize + cellSize / 2;
+          const startCellCenterY = gridY + startCell.r * cellSize + cellSize / 2;
+          const endCellCenterY = gridY + endCell.r * cellSize + cellSize / 2;
+          
+          // Calculate bar position: extend from barExtension before first center to barExtension after last center
+          const rectX = colCenterX - barThickness / 2;
+          const rectY = Math.min(startCellCenterY, endCellCenterY) - barExtension;
+          const rectW = barThickness;
+          const rectH = Math.abs(endCellCenterY - startCellCenterY) + 2 * barExtension;
           
           doc.roundedRect(rectX, rectY, rectW, rectH, cornerRadius, cornerRadius, 'FD');
         } else {
-          // Diagonal word - draw a rotated rectangle
+          // Diagonal word - draw a rotated capsule
           // Calculate the angle of the word
           const angle = Math.atan2(dr, dc);
           
-          // Calculate the center point of the word
-          const centerCol = (startCell.c + endCell.c) / 2;
-          const centerRow = (startCell.r + endCell.r) / 2;
-          const centerX = gridX + centerCol * cellSize + cellSize / 2;
-          const centerY = gridY + centerRow * cellSize + cellSize / 2;
+          // Calculate cell centers for start and end
+          const startCellCenterX = gridX + startCell.c * cellSize + cellSize / 2;
+          const startCellCenterY = gridY + startCell.r * cellSize + cellSize / 2;
+          const endCellCenterX = gridX + endCell.c * cellSize + cellSize / 2;
+          const endCellCenterY = gridY + endCell.r * cellSize + cellSize / 2;
           
-          // Calculate the length of the rectangle
-          // For a diagonal word, the rectangle should span the same number of cells as the word length
-          // measured along the diagonal direction
-          const rectW = wordLength * cellSize + 2 * padding;
-          const rectH = cellSize + 2 * padding;
+          // Calculate the midpoint of the bar (center between first and last cell centers)
+          const centerX = (startCellCenterX + endCellCenterX) / 2;
+          const centerY = (startCellCenterY + endCellCenterY) / 2;
           
-          // Draw rotated rectangle using a polygon approach
+          // Calculate the length of the bar along the diagonal
+          // Distance between cell centers plus extensions on both ends
+          const cellCenterDistance = Math.sqrt(
+            Math.pow(endCellCenterX - startCellCenterX, 2) + 
+            Math.pow(endCellCenterY - startCellCenterY, 2)
+          );
+          const rectW = cellCenterDistance + 2 * barExtension;
+          const rectH = barThickness;
+          
+          // For diagonal bars, we need to draw a rounded capsule rotated at the angle
+          // We'll use a path approach to create rounded ends
           const cos = Math.cos(angle);
           const sin = Math.sin(angle);
           
-          // Calculate half dimensions
+          // Half dimensions
           const hw = rectW / 2;
           const hh = rectH / 2;
           
-          // Calculate the four corners (before rotation, centered at origin)
+          // Create a capsule shape using arcs and lines
+          // We'll approximate the rounded ends with a polygon for simplicity
+          // A better approach would be to use actual arc commands, but jsPDF's polygon approach works well
+          
+          // Calculate the four main corners of the rectangle (before rounding)
           const corners = [
             { x: -hw, y: -hh },
             { x: hw, y: -hh },
@@ -1133,7 +1178,8 @@
           }));
           
           // Draw as a filled and stroked polygon
-          // doc.lines expects an array of [dx, dy] pairs relative to starting point
+          // Note: jsPDF doesn't have native support for rotated rounded rectangles,
+          // so we draw a rectangular polygon. The visual effect is still a clean bar.
           doc.lines([
             [rotatedCorners[1].x - rotatedCorners[0].x, rotatedCorners[1].y - rotatedCorners[0].y],
             [rotatedCorners[2].x - rotatedCorners[1].x, rotatedCorners[2].y - rotatedCorners[1].y],
