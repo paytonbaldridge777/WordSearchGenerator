@@ -1067,9 +1067,18 @@
       const rectFillColor = { r: 200, g: 200, b: 200 };     // Light grey fill (semi-transparent appearance)
       const rectBorderColor = { r: 120, g: 120, b: 120 };   // Darker grey border for definition
       
+      // Bar opacity (0.0 to 1.0)
+      // Semi-transparent so overlapping bars are visible and stack naturally
+      const barOpacity = 0.5;
+      
+      // Bar thickness as percentage of cell size (0.0 to 1.0)
+      // Tunable constant for easy adjustment. Set to 0.85 (85%) for slight spacing
+      // between parallel/adjacent words while maintaining visual coverage.
+      const BAR_THICKNESS_PERCENT = 0.85;
+      
       // Corner radius for capsule ends (in inches)
-      // Set to cellSize/2 for perfect semicircle ends on horizontal/vertical bars
-      const cornerRadius = cellSize / 2;
+      // Set to (cellSize * BAR_THICKNESS_PERCENT) / 2 for perfect semicircle ends
+      const cornerRadius = (cellSize * BAR_THICKNESS_PERCENT) / 2;
       
       // Bar extension beyond cell centers (in inches)
       // This ensures the bar covers the ENTIRE first and last letter cell.
@@ -1078,14 +1087,17 @@
       const barExtension = cellSize / 2;
       
       // Bar thickness (in inches)
-      // Set to exactly cellSize for flush alignment with grid cell boundaries.
-      // This ensures no gaps between adjacent parallel words (e.g., two horizontal words in consecutive rows)
-      const barThickness = cellSize;
+      // Set to BAR_THICKNESS_PERCENT * cellSize (85% by default) for minimal gaps
+      // between adjacent parallel words while maintaining clean separation
+      const barThickness = cellSize * BAR_THICKNESS_PERCENT;
       
       // Border width (in inches)
       const borderWidth = 0.01;
       
       // ============================================================
+      
+      // Set opacity for semi-transparent bars
+      doc.setGState(new doc.GState({ opacity: barOpacity }));
       
       doc.setLineWidth(borderWidth);
       
@@ -1200,6 +1212,9 @@
           ], rotatedCorners[0].x, rotatedCorners[0].y, [1, 1], 'FD', true);
         }
       }
+      
+      // Reset opacity to full for letters and verse text
+      doc.setGState(new doc.GState({ opacity: 1.0 }));
     }
 
     // Letters - use configured font size or auto-calculate based on cell size
