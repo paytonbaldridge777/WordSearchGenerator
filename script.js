@@ -1177,14 +1177,12 @@
           doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);
           doc.setLineWidth(barThickness + 2 * borderWidth);
           doc.setLineCap('round');
-          doc.setLineJoin('round');
           doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
           
           // Draw the fill line on top (creating the fill with border effect)
           doc.setDrawColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
           doc.setLineWidth(barThickness);
           doc.setLineCap('round');
-          doc.setLineJoin('round');
           doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
           
           // Reset line width for subsequent operations
