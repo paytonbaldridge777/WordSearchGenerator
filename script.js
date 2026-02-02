@@ -1122,7 +1122,7 @@
         
         doc.setFillColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
         doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);
-        doc.setGState(new doc.GState({ opacity: barOpacity }));
+        doc.setGState(new doc.GState({ opacity:  }));
         
         // For horizontal and vertical words, draw a simple capsule using roundedRect
         if (isHorizontal) {
@@ -1178,14 +1178,14 @@
           
           // Draw the border line first (slightly thicker to show around the fill)
           doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);          
-          doc.setGState(new doc.GState({ opacity: 1.0, 'stroke-opacity': 1.0 }));
+          doc.setGState(new doc.GState({ opacity: , 'stroke-opacity':  }));
           doc.setLineWidth(barThickness + 2 * borderWidth);
           doc.setLineCap('round');
           doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
           
           // Draw the fill line on top (creating the fill with border effect)
           doc.setDrawColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
-          doc.setGState(new doc.GState({ opacity: barOpacity, 'stroke-opacity': barOpacity }));
+          doc.setGState(new doc.GState({ opacity: , 'stroke-opacity':  }));
           doc.setLineWidth(barThickness);
           doc.setLineCap('round');
           doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
@@ -1519,6 +1519,7 @@
     lastState = null;
   });
 })();
+
 
 
 
