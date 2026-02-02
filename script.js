@@ -1178,7 +1178,7 @@
           
           // Draw the border line first (slightly thicker to show around the fill)
           doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);          
-          doc.setGState(new doc.GState({ opacity: barOpacity, 'stroke-opacity': barOpacity }));
+          doc.setGState(new doc.GState({ opacity: 1.0, 'stroke-opacity': 1.0 }));
           doc.setLineWidth(barThickness + 2 * borderWidth);
           doc.setLineCap('round');
           doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
@@ -1519,6 +1519,7 @@
     lastState = null;
   });
 })();
+
 
 
 
