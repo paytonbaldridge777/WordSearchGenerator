@@ -1178,14 +1178,14 @@
           
           // Draw the border line first (slightly thicker to show around the fill)
           doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);          
-          doc.setGState(new doc.GState({ strokeOpacity: barOpacity }));  // Changed to strokeOpacity
+          doc.setGState(new doc.GState({ opacity: barOpacity }));  // Changed to opacity
           doc.setLineWidth(barThickness + 2 * borderWidth);
           doc.setLineCap('round');
           doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
           
           // Draw the fill line on top (creating the fill with border effect)
           doc.setDrawColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
-          doc.setGState(new doc.GState({ strokeOpacity: barOpacity }));  // Changed to strokeOpacity
+          doc.setGState(new doc.GState({ opacity: barOpacity }));  // Changed to opacity
           doc.setLineWidth(barThickness);
           doc.setLineCap('round');
           doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
@@ -1519,6 +1519,7 @@
     lastState = null;
   });
 })();
+
 
 
 
