@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Diagonal Bar Rounded Corners - Visual Test</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 { color: #333; }
+    .test-section {
+      background: #f5f5f5;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 10px 10px 10px 0;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    .info {
+      background: #e0f2fe;
+      padding: 15px;
+      border-left: 4px solid #0284c7;
+      margin: 15px 0;
+    }
+    .success {
+      background: #dcfce7;
+      padding: 15px;
+      border-left: 4px solid #16a34a;
+      margin: 15px 0;
+    }
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 Diagonal Bar Rounded Corners - Visual Test</h1>
+  
+  <div class="info">
+    <strong>Purpose:</strong> This test demonstrates the fix for diagonal word highlight bars, 
+    showing that they now have rounded ends matching horizontal and vertical bars.
+  </div>
+
+  <div class="test-section">
+    <h2>Test: Generate Sample PDF</h2>
+    <p>This will create a PDF with three types of bars to compare:</p>
+    <ul>
+      <li><strong>Horizontal bar</strong> - Uses <code>roundedRect()</code> with rounded corners</li>
+      <li><strong>Vertical bar</strong> - Uses <code>roundedRect()</code> with rounded corners</li>
+      <li><strong>Diagonal bar</strong> - Uses stroked line with <code>setLineCap('round')</code> ✨ NEW!</li>
+    </ul>
+    <button onclick="generateTestPDF()">Generate Test PDF</button>
+    <div id="status"></div>
+  </div>
+
+  <div class="success">
+    <h3>✅ Expected Results</h3>
+    <p>All three bars should have:</p>
+    <ul>
+      <li>Rounded capsule ends (circular/elliptical caps)</li>
+      <li>Semi-transparent grey fill (RGB 200, 200, 200)</li>
+      <li>Darker grey border (RGB 120, 120, 120)</li>
+      <li>85% bar thickness relative to cell size</li>
+      <li>Consistent visual appearance</li>
+    </ul>
+  </div>
+
+  <div class="test-section">
+    <h2>Implementation Details</h2>
+    <p><strong>Previous approach for diagonal bars:</strong></p>
+    <ul>
+      <li>Used filled polygons via <code>doc.lines()</code></li>
+      <li>Could not achieve rounded ends</li>
+      <li>Sharp rectangular corners</li>
+    </ul>
+    
+    <p><strong>New approach for diagonal bars:</strong></p>
+    <ul>
+      <li>Uses stroked lines with <code>doc.line()</code></li>
+      <li>Sets <code>doc.setLineCap('round')</code> for circular end caps</li>
+      <li>Draws two layers: border (thicker) + fill (normal thickness)</li>
+      <li>Perfectly rounded ends matching horizontal/vertical bars</li>
+    </ul>
+  </div>
+
+  <script>
+    function generateTestPDF() {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = 'Generating PDF...';
+      
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Parameters matching word search implementation
+        const cellSize = 0.5;
+        const barThickness = cellSize * 0.85;
+        const borderWidth = 0.01;
+        const barExtension = cellSize / 2;
+        const cornerRadius = (cellSize * 0.85) / 2;
+        const barOpacity = 0.5;
+        const rectFillColor = { r: 200, g: 200, b: 200 };
+        const rectBorderColor = { r: 120, g: 120, b: 120 };
+        
+        // Set semi-transparent
+        doc.setGState(new doc.GState({ opacity: barOpacity }));
+        
+        // Title
+        doc.setFontSize(18);
+        doc.setGState(new doc.GState({ opacity: 1.0 }));
+        doc.text('Diagonal Bar Rounded Corners Test', 2, 1.5);
+        doc.setFontSize(12);
+        doc.text('All bars should have rounded capsule ends', 2, 1.9);
+        doc.setGState(new doc.GState({ opacity: barOpacity }));
+        
+        // Test 1: Horizontal bar
+        const h_y = 3;
+        doc.setFillColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
+        doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);
+        doc.setLineWidth(borderWidth);
+        doc.roundedRect(2, h_y - barThickness/2, 4 * cellSize, barThickness, cornerRadius, cornerRadius, 'FD');
+        doc.setGState(new doc.GState({ opacity: 1.0 }));
+        doc.setFontSize(10);
+        doc.text('1. Horizontal Bar (roundedRect)', 2, h_y + 0.5);
+        doc.text('Method: doc.roundedRect() with FD', 2, h_y + 0.75);
+        doc.setGState(new doc.GState({ opacity: barOpacity }));
+        
+        // Test 2: Vertical bar
+        const v_x = 2;
+        const v_y = 5;
+        doc.setFillColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
+        doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);
+        doc.setLineWidth(borderWidth);
+        doc.roundedRect(v_x - barThickness/2, v_y, barThickness, 4 * cellSize, cornerRadius, cornerRadius, 'FD');
+        doc.setGState(new doc.GState({ opacity: 1.0 }));
+        doc.text('2. Vertical Bar (roundedRect)', 2.5, v_y - 0.2);
+        doc.text('Method: doc.roundedRect() with FD', 2.5, v_y + 0.05);
+        doc.setGState(new doc.GState({ opacity: barOpacity }));
+        
+        // Test 3: Diagonal bar (NEW METHOD)
+        const d_startX = 4.5;
+        const d_startY = 5;
+        const d_endX = 6.5;
+        const d_endY = 7;
+        
+        // Calculate direction
+        const dx = d_endX - d_startX;
+        const dy = d_endY - d_startY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const unitX = dx / distance;
+        const unitY = dy / distance;
+        
+        // Extend line
+        const lineStartX = d_startX - unitX * barExtension;
+        const lineStartY = d_startY - unitY * barExtension;
+        const lineEndX = d_endX + unitX * barExtension;
+        const lineEndY = d_endY + unitY * barExtension;
+        
+        // Draw border line
+        doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);
+        doc.setLineWidth(barThickness + 2 * borderWidth);
+        doc.setLineCap('round');
+        doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
+        
+        // Draw fill line
+        doc.setDrawColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
+        doc.setLineWidth(barThickness);
+        doc.setLineCap('round');
+        doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
+        
+        doc.setGState(new doc.GState({ opacity: 1.0 }));
+        doc.text('3. Diagonal Bar (NEW: setLineCap)', 4.5, 7.5);
+        doc.text('Method: doc.line() with setLineCap(\'round\')', 4.5, 7.75);
+        
+        // Add comparison notes
+        doc.setFontSize(11);
+        doc.text('Compare the ends:', 2, 9.5);
+        doc.setFontSize(10);
+        doc.text('- Horizontal: Rounded capsule ends ✓', 2.3, 9.9);
+        doc.text('- Vertical: Rounded capsule ends ✓', 2.3, 10.2);
+        doc.text('- Diagonal: Rounded capsule ends ✓ (FIXED!)', 2.3, 10.5);
+        
+        // Add technical details
+        doc.setFontSize(9);
+        doc.text('Parameters:', 2, 11.2);
+        doc.text(`- Bar thickness: ${(barThickness * 100 / cellSize).toFixed(0)}% of cell size`, 2.3, 11.5);
+        doc.text(`- Opacity: ${(barOpacity * 100).toFixed(0)}%`, 2.3, 11.8);
+        doc.text(`- Border width: ${borderWidth} inches`, 2.3, 12.1);
+        doc.text(`- Corner radius: ${cornerRadius.toFixed(3)} inches`, 2.3, 12.4);
+        
+        // Save the PDF
+        doc.save('diagonal_bar_test.pdf');
+        statusEl.textContent = '✅ PDF generated successfully! Check your downloads.';
+        statusEl.style.color = '#16a34a';
+        statusEl.style.fontWeight = 'bold';
+      } catch (error) {
+        statusEl.textContent = '❌ Error: ' + error.message;
+        statusEl.style.color = '#dc2626';
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
