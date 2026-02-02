@@ -1151,9 +1151,8 @@
           
           doc.roundedRect(rectX, rectY, rectW, rectH, cornerRadius, cornerRadius, 'FD');
         } else {
-          // Diagonal word - draw a rotated capsule
-          // Calculate the angle of the word
-          const angle = Math.atan2(dr, dc);
+          // Diagonal word - draw a capsule with rounded ends using stroked lines with round caps
+          // This approach gives us perfectly rounded ends matching horizontal/vertical bars
           
           // Calculate cell centers for start and end
           const startCellCenterX = gridX + startCell.c * cellSize + cellSize / 2;
@@ -1161,55 +1160,35 @@
           const endCellCenterX = gridX + endCell.c * cellSize + cellSize / 2;
           const endCellCenterY = gridY + endCell.r * cellSize + cellSize / 2;
           
-          // Calculate the midpoint of the bar (center between first and last cell centers)
-          const centerX = (startCellCenterX + endCellCenterX) / 2;
-          const centerY = (startCellCenterY + endCellCenterY) / 2;
+          // Calculate the direction vector and normalize it
+          const dx = endCellCenterX - startCellCenterX;
+          const dy = endCellCenterY - startCellCenterY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const unitX = dx / distance;
+          const unitY = dy / distance;
           
-          // Calculate the length of the bar along the diagonal
-          // Distance between cell centers plus extensions on both ends
-          const cellCenterDistance = Math.sqrt(
-            Math.pow(endCellCenterX - startCellCenterX, 2) + 
-            Math.pow(endCellCenterY - startCellCenterY, 2)
-          );
-          const rectW = cellCenterDistance + 2 * barExtension;
-          const rectH = barThickness;
+          // Calculate start and end points with extension
+          const lineStartX = startCellCenterX - unitX * barExtension;
+          const lineStartY = startCellCenterY - unitY * barExtension;
+          const lineEndX = endCellCenterX + unitX * barExtension;
+          const lineEndY = endCellCenterY + unitY * barExtension;
           
-          // For diagonal bars, we need to draw a rounded capsule rotated at the angle
-          // We'll use a path approach to create rounded ends
-          const cos = Math.cos(angle);
-          const sin = Math.sin(angle);
+          // Draw the border line first (slightly thicker to show around the fill)
+          doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);
+          doc.setLineWidth(barThickness + 2 * borderWidth);
+          doc.setLineCap('round');
+          doc.setLineJoin('round');
+          doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
           
-          // Half dimensions
-          const hw = rectW / 2;
-          const hh = rectH / 2;
+          // Draw the fill line on top (creating the fill with border effect)
+          doc.setDrawColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
+          doc.setLineWidth(barThickness);
+          doc.setLineCap('round');
+          doc.setLineJoin('round');
+          doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
           
-          // Create a capsule shape using arcs and lines
-          // We'll approximate the rounded ends with a polygon for simplicity
-          // A better approach would be to use actual arc commands, but jsPDF's polygon approach works well
-          
-          // Calculate the four main corners of the rectangle (before rounding)
-          const corners = [
-            { x: -hw, y: -hh },
-            { x: hw, y: -hh },
-            { x: hw, y: hh },
-            { x: -hw, y: hh }
-          ];
-          
-          // Rotate and translate corners to final position
-          const rotatedCorners = corners.map(c => ({
-            x: centerX + c.x * cos - c.y * sin,
-            y: centerY + c.x * sin + c.y * cos
-          }));
-          
-          // Draw as a filled and stroked polygon
-          // Note: jsPDF doesn't have native support for rotated rounded rectangles,
-          // so we draw a rectangular polygon. The visual effect is still a clean bar.
-          doc.lines([
-            [rotatedCorners[1].x - rotatedCorners[0].x, rotatedCorners[1].y - rotatedCorners[0].y],
-            [rotatedCorners[2].x - rotatedCorners[1].x, rotatedCorners[2].y - rotatedCorners[1].y],
-            [rotatedCorners[3].x - rotatedCorners[2].x, rotatedCorners[3].y - rotatedCorners[2].y],
-            [rotatedCorners[0].x - rotatedCorners[3].x, rotatedCorners[0].y - rotatedCorners[3].y]
-          ], rotatedCorners[0].x, rotatedCorners[0].y, [1, 1], 'FD', true);
+          // Reset line width for subsequent operations
+          doc.setLineWidth(borderWidth);
         }
       }
       
