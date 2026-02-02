@@ -1085,7 +1085,7 @@
       // Calculation: bar runs from (firstCellCenter - barExtension) to (lastCellCenter + barExtension)
       // With barExtension = cellSize/2, this means bar runs from edge to edge of cells
       const barExtension = cellSize / 2;
-      const diagonalBarExtension = cellSize / 2.5;  // Shorter for diagonals only
+      const diagonalBarExtension = cellSize / 3.5;  // Shorter for diagonals only
 
       
       // Bar thickness (in inches)
@@ -1177,7 +1177,7 @@
           const lineEndY = endCellCenterY + unitY * diagonalBarExtension;
           
           // Draw the border line first (slightly thicker to show around the fill)
-          doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);
+          doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);          
           doc.setGState(new doc.GState({ opacity: barOpacity }));
           doc.setLineWidth(barThickness + 2 * borderWidth);
           doc.setLineCap('round');
@@ -1518,6 +1518,7 @@
     lastState = null;
   });
 })();
+
 
 
 
