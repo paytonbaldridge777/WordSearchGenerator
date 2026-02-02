@@ -1185,6 +1185,7 @@
           
           // Draw the fill line on top (creating the fill with border effect)
           doc.setDrawColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
+          doc.setGState(new doc.GState({ opacity: barOpacity }));
           doc.setLineWidth(barThickness);
           doc.setLineCap('round');
           doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
@@ -1518,6 +1519,7 @@
     lastState = null;
   });
 })();
+
 
 
 
