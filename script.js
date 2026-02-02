@@ -1085,6 +1085,8 @@
       // Calculation: bar runs from (firstCellCenter - barExtension) to (lastCellCenter + barExtension)
       // With barExtension = cellSize/2, this means bar runs from edge to edge of cells
       const barExtension = cellSize / 2;
+      const diagonalBarExtension = cellSize / 2.5;  // Shorter for diagonals only
+
       
       // Bar thickness (in inches)
       // Set to BAR_THICKNESS_PERCENT * cellSize (85% by default) for minimal gaps
@@ -1169,10 +1171,10 @@
           const unitY = dy / distance;
           
           // Calculate start and end points with extension
-          const lineStartX = startCellCenterX - unitX * barExtension;
-          const lineStartY = startCellCenterY - unitY * barExtension;
-          const lineEndX = endCellCenterX + unitX * barExtension;
-          const lineEndY = endCellCenterY + unitY * barExtension;
+          const lineStartX = startCellCenterX - unitX * diagonalBarExtension;
+          const lineStartY = startCellCenterY - unitY * diagonalBarExtension;
+          const lineEndX = endCellCenterX + unitX * diagonalBarExtension;
+          const lineEndY = endCellCenterY + unitY * diagonalBarExtension;
           
           // Draw the border line first (slightly thicker to show around the fill)
           doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);
@@ -1516,6 +1518,7 @@
     lastState = null;
   });
 })();
+
 
 
 
