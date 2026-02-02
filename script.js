@@ -17,7 +17,7 @@
     localStorage.setItem("theme", isDark ? "dark" : "light");
   });
 
-  // ------------------ Main App ------------------
+  // ------------------ Main App ----------------
   const el = (id) => document.getElementById(id);
 
   // Default font constants
@@ -1519,6 +1519,7 @@
     lastState = null;
   });
 })();
+
 
 
 
