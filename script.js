@@ -1050,24 +1050,36 @@
     // Solution highlights - draw tightly fitted capsule-style rounded rectangles for each word
     if (withHighlights && placed?.length) {
       // ==================== TUNABLE PARAMETERS ====================
-      // These parameters control the appearance of the word highlight capsules
+      // These parameters control the appearance of the word highlight capsules.
+      //
+      // Visual representation of a horizontal word bar:
+      //   ┌─────┬─────┬─────┬─────┐
+      //   │  L  │  O  │  R  │  D  │  <- Grid cells
+      //   └─────┴─────┴─────┴─────┘
+      //   ╭────────────────────────╮  <- Capsule bar
+      //   │ L     O     R     D    │     (rounded ends, covers entire cells)
+      //   ╰────────────────────────╯
+      //
+      // The bar extends from the left edge of the first cell to the right edge
+      // of the last cell, with rounded semicircle ends (capsule style).
       
       // Bar colors (RGB 0-255)
       const rectFillColor = { r: 200, g: 200, b: 200 };     // Light grey fill (semi-transparent appearance)
       const rectBorderColor = { r: 120, g: 120, b: 120 };   // Darker grey border for definition
       
       // Corner radius for capsule ends (in inches)
-      // Should be approximately cellSize/2 for perfect semicircle ends
+      // Set to cellSize/2 for perfect semicircle ends on horizontal/vertical bars
       const cornerRadius = cellSize / 2;
       
       // Bar extension beyond cell centers (in inches)
-      // This ensures the bar covers the ENTIRE first and last letter cell
-      // Value of cellSize/2 means bar extends from edge to edge of cells
+      // This ensures the bar covers the ENTIRE first and last letter cell.
+      // Calculation: bar runs from (firstCellCenter - barExtension) to (lastCellCenter + barExtension)
+      // With barExtension = cellSize/2, this means bar runs from edge to edge of cells
       const barExtension = cellSize / 2;
       
       // Bar thickness (in inches)
-      // Set to exactly cellSize for flush alignment with grid cells
-      // This ensures no gaps between adjacent parallel words
+      // Set to exactly cellSize for flush alignment with grid cell boundaries.
+      // This ensures no gaps between adjacent parallel words (e.g., two horizontal words in consecutive rows)
       const barThickness = cellSize;
       
       // Border width (in inches)
