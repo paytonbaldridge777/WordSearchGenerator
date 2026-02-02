@@ -1176,16 +1176,16 @@
           const lineEndX = endCellCenterX + unitX * diagonalBarExtension;
           const lineEndY = endCellCenterY + unitY * diagonalBarExtension;
           
-          // Draw the border line first (slightly thicker to show around the fill)
+         // Draw the border line first at FULL OPACITY (no stacking)
           doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);          
-          doc.setGState(new doc.GState({ opacity: barOpacity  }));
+          doc.setGState(new doc.GState({ opacity: 1.0, 'stroke-opacity': 1.0 })); // FULL opacity for border
           doc.setLineWidth(barThickness + 2 * borderWidth);
           doc.setLineCap('round');
           doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
           
-          // Draw the fill line on top (creating the fill with border effect)
+          // Draw the fill line on top at desired opacity
           doc.setDrawColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
-          doc.setGState(new doc.GState({ opacity: barOpacity , 'stroke-opacity': barOpacity }));
+          doc.setGState(new doc.GState({ opacity: barOpacity, 'stroke-opacity': barOpacity })); // 0.5 opacity for fill
           doc.setLineWidth(barThickness);
           doc.setLineCap('round');
           doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
@@ -1519,6 +1519,7 @@
     lastState = null;
   });
 })();
+
 
 
 
