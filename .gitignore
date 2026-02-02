@@ -2,8 +2,13 @@
 CrosswordGenerator/Bibles/*.json
 !CrosswordGenerator/Bibles/demo.json
 
-# Node modules
+# Node modules and package files
 node_modules/
+package.json
+package-lock.json
+
+# Test files
+test-capsule.js
 
 # Build artifacts
 dist/
