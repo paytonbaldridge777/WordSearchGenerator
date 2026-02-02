@@ -1176,10 +1176,10 @@
           const lineEndX = endCellCenterX + unitX * diagonalBarExtension;
           const lineEndY = endCellCenterY + unitY * diagonalBarExtension;
           
-         // Draw the border line first at FULL OPACITY (no stacking)
-          doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);          
-          doc.setGState(new doc.GState({ opacity: .75, 'stroke-opacity': .75 })); // FULL opacity for border
-          doc.setLineWidth(barThickness + 2 * borderWidth);
+           // For diagonal - SINGLE line with correct opacity (no border/fill layering)
+          doc.setDrawColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
+          doc.setGState(new doc.GState({ opacity: barOpacity, 'stroke-opacity': barOpacity })); // 0.5 only!
+          doc.setLineWidth(barThickness);
           doc.setLineCap('round');
           doc.line(lineStartX, lineStartY, lineEndX, lineEndY, 'S');
           
@@ -1519,6 +1519,7 @@
     lastState = null;
   });
 })();
+
 
 
 
