@@ -1055,7 +1055,7 @@
       const cornerRadius = 0.08; // Rounded corner radius in inches
       const padding = 0.05; // Padding around word in inches
       
-      // Draw a rounded rectangle for each placed word
+      // Draw a rounded rectangle for each placed word independently
       for (const p of placed) {
         if (!p.cells || p.cells.length === 0) continue;
         
@@ -1063,31 +1063,84 @@
         const startCell = p.cells[0];
         const endCell = p.cells[p.cells.length - 1];
         
-        // Calculate rectangle bounds
-        const minRow = Math.min(startCell.r, endCell.r);
-        const maxRow = Math.max(startCell.r, endCell.r);
-        const minCol = Math.min(startCell.c, endCell.c);
-        const maxCol = Math.max(startCell.c, endCell.c);
+        // Calculate the direction vector
+        const dr = endCell.r - startCell.r;
+        const dc = endCell.c - startCell.c;
+        const wordLength = p.cells.length;
         
-        // Calculate rectangle position and size
-        const rectX = gridX + minCol * cellSize - padding;
-        const rectY = gridY + minRow * cellSize - padding;
-        const rectW = (maxCol - minCol + 1) * cellSize + 2 * padding;
-        const rectH = (maxRow - minRow + 1) * cellSize + 2 * padding;
+        // Determine if word is horizontal, vertical, or diagonal
+        const isHorizontal = dr === 0;
+        const isVertical = dc === 0;
         
-        // Draw rounded rectangle with semi-transparent fill
-        // jsPDF doesn't support alpha transparency directly, so we'll use a fallback approach
-        // by setting fill and stroke colors without alpha (using lighter colors to simulate transparency)
-        
-        // Set fill color (lighter grey to simulate semi-transparency)
         doc.setFillColor(rectFillColor.r, rectFillColor.g, rectFillColor.b);
-        
-        // Set border color (slightly darker grey)
         doc.setDrawColor(rectBorderColor.r, rectBorderColor.g, rectBorderColor.b);
         doc.setLineWidth(0.01);
         
-        // Draw the rounded rectangle
-        doc.roundedRect(rectX, rectY, rectW, rectH, cornerRadius, cornerRadius, 'FD'); // 'FD' = Fill and Draw (stroke)
+        // For horizontal and vertical words, draw a simple capsule-shaped rectangle
+        if (isHorizontal) {
+          // Horizontal word
+          const rectX = gridX + Math.min(startCell.c, endCell.c) * cellSize - padding;
+          const rectY = gridY + startCell.r * cellSize - padding;
+          const rectW = wordLength * cellSize + 2 * padding;
+          const rectH = cellSize + 2 * padding;
+          
+          doc.roundedRect(rectX, rectY, rectW, rectH, cornerRadius, cornerRadius, 'FD');
+        } else if (isVertical) {
+          // Vertical word
+          const rectX = gridX + startCell.c * cellSize - padding;
+          const rectY = gridY + Math.min(startCell.r, endCell.r) * cellSize - padding;
+          const rectW = cellSize + 2 * padding;
+          const rectH = wordLength * cellSize + 2 * padding;
+          
+          doc.roundedRect(rectX, rectY, rectW, rectH, cornerRadius, cornerRadius, 'FD');
+        } else {
+          // Diagonal word - draw a rotated rectangle
+          // Calculate the angle of the word
+          const angle = Math.atan2(dr, dc);
+          
+          // Calculate the center point of the word
+          const centerCol = (startCell.c + endCell.c) / 2;
+          const centerRow = (startCell.r + endCell.r) / 2;
+          const centerX = gridX + centerCol * cellSize + cellSize / 2;
+          const centerY = gridY + centerRow * cellSize + cellSize / 2;
+          
+          // Calculate the length of the rectangle
+          // For a diagonal word, the rectangle should span the same number of cells as the word length
+          // measured along the diagonal direction
+          const rectW = wordLength * cellSize + 2 * padding;
+          const rectH = cellSize + 2 * padding;
+          
+          // Draw rotated rectangle using a polygon approach
+          const cos = Math.cos(angle);
+          const sin = Math.sin(angle);
+          
+          // Calculate half dimensions
+          const hw = rectW / 2;
+          const hh = rectH / 2;
+          
+          // Calculate the four corners (before rotation, centered at origin)
+          const corners = [
+            { x: -hw, y: -hh },
+            { x: hw, y: -hh },
+            { x: hw, y: hh },
+            { x: -hw, y: hh }
+          ];
+          
+          // Rotate and translate corners to final position
+          const rotatedCorners = corners.map(c => ({
+            x: centerX + c.x * cos - c.y * sin,
+            y: centerY + c.x * sin + c.y * cos
+          }));
+          
+          // Draw as a filled and stroked polygon
+          // doc.lines expects an array of [dx, dy] pairs relative to starting point
+          doc.lines([
+            [rotatedCorners[1].x - rotatedCorners[0].x, rotatedCorners[1].y - rotatedCorners[0].y],
+            [rotatedCorners[2].x - rotatedCorners[1].x, rotatedCorners[2].y - rotatedCorners[1].y],
+            [rotatedCorners[3].x - rotatedCorners[2].x, rotatedCorners[3].y - rotatedCorners[2].y],
+            [rotatedCorners[0].x - rotatedCorners[3].x, rotatedCorners[0].y - rotatedCorners[3].y]
+          ], rotatedCorners[0].x, rotatedCorners[0].y, [1, 1], 'FD', true);
+        }
       }
     }
 
