@@ -41,7 +41,7 @@ Open the generated `*_Solution.pdf` file and verify:
 - Bar follows the diagonal path
 - Bar covers entire first and last cells
 - Bar thickness is 85% of cell size along perpendicular axis
-- Rectangular shape with proper rotation (note: jsPDF limitation prevents perfect rounded ends on rotated bars)
+- **Rounded capsule ends** matching horizontal/vertical bars (uses stroked lines with round caps)
 
 #### Letter Appearance
 - Solution letters are bold and black
@@ -137,17 +137,16 @@ To change the appearance:
 
 ## Known Limitations
 
-1. **Diagonal bars**: Due to jsPDF limitations, diagonal bars use a polygon approach rather than true rounded rectangles. The visual effect is still clean but ends are not perfectly rounded.
-
-2. **Very small cell sizes**: With very small cells, the rounded corners may appear less smooth due to PDF rendering resolution.
+1. **Very small cell sizes**: With very small cells, the rounded corners may appear less smooth due to PDF rendering resolution.
 
 ## Success Criteria
 
 The implementation is successful if:
 - ✅ All words are fully covered from edge to edge
-- ✅ Bar thickness matches cell size
-- ✅ No visible gaps between adjacent parallel words
+- ✅ Bar thickness matches cell size (85% by default)
+- ✅ No visible gaps between adjacent parallel words (15% gap)
 - ✅ Rounded ends are visible on horizontal/vertical words
+- ✅ **Rounded ends are visible on diagonal words** (matching horizontal/vertical style)
 - ✅ Solution letters are bold, non-solution letters are greyed
 - ✅ Bars overlap only at word intersections
 - ✅ All parameters are clearly documented
