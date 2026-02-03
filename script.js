@@ -1,5 +1,5 @@
 (() => {
-  // ------------------ Theme Toggle ------------------
+  // ---------------- Theme Toggle ------------------
   const themeToggle = document.getElementById("themeToggle");
   const body = document.body;
 
@@ -1519,6 +1519,7 @@
     lastState = null;
   });
 })();
+
 
 
 
