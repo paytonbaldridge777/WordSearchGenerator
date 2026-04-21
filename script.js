@@ -652,7 +652,7 @@
   async function translateSingleChunk(text, targetLang) {
     // Original translation logic - untouched
     const encodedText = encodeURIComponent(text);
-    const url = `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|${targetLang}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|${targetLang}&de=bibleapp.shepherd@gmail.com`;
     
     const response = await fetch(url);
     const data = await response.json();
