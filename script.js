@@ -649,61 +649,56 @@
   });
 
   // ------------------ Translation Service ------------------
-  async function translateChunk(chunk, targetLang) {
-    const encodedText = encodeURIComponent(chunk);
+  async function translateSingleChunk(text, targetLang) {
+    // Original translation logic - untouched
+    const encodedText = encodeURIComponent(text);
     const url = `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|${targetLang}`;
+    
     const response = await fetch(url);
     const data = await response.json();
+    
     if (data.responseStatus === 200 && data.responseData) {
-      return { success: true, text: data.responseData.translatedText };
+      return data.responseData.translatedText;
     } else if (data.responseStatus === 403) {
-      return { success: false, reason: 'quota' };
+      console.warn('Translation quota exceeded, using original text');
+      messages.textContent = 'Translation quota exceeded. Showing English text.';
+      return text;
     } else {
-      return { success: false, reason: 'failed' };
+      console.warn('Translation failed, using original text');
+      messages.textContent = 'Translation unavailable. Showing English text.';
+      return text;
     }
-  }
-
-  function splitIntoChunks(text, maxLen = 450) {
-    // Split on word boundaries to stay under MyMemory's 500-char limit
-    const words = text.split(' ');
-    const chunks = [];
-    let current = '';
-    for (const word of words) {
-      const candidate = current ? current + ' ' + word : word;
-      if (candidate.length > maxLen) {
-        if (current) chunks.push(current);
-        current = word;
-      } else {
-        current = candidate;
-      }
-    }
-    if (current) chunks.push(current);
-    return chunks;
   }
 
   async function translateText(text, targetLang) {
     if (targetLang === 'en' || !text) {
       return text; // No translation needed for English
     }
-
+    
     try {
-      const chunks = splitIntoChunks(text);
-      const translatedChunks = [];
-      for (let i = 0; i < chunks.length; i++) {
-        const result = await translateChunk(chunks[i], targetLang);
-        if (result.success) {
-          translatedChunks.push(result.text);
-        } else if (result.reason === 'quota') {
-          console.warn('Translation quota exceeded, using original text');
-          messages.textContent = 'Translation quota exceeded. Showing English text.';
-          return text;
+      // Split into chunks of 450 chars (under MyMemory's 500-char limit)
+      const words = text.split(' ');
+      const chunks = [];
+      let current = '';
+      for (const word of words) {
+        const candidate = current ? current + ' ' + word : word;
+        if (candidate.length > 450) {
+          if (current) chunks.push(current);
+          current = word;
         } else {
-          console.warn('Chunk translation failed, using original chunk text');
-          translatedChunks.push(chunks[i]);
+          current = candidate;
         }
+      }
+      if (current) chunks.push(current);
+
+      // Translate each chunk using the original logic, sequentially
+      const results = [];
+      for (let i = 0; i < chunks.length; i++) {
+        const translated = await translateSingleChunk(chunks[i], targetLang);
+        results.push(translated);
         if (i < chunks.length - 1) await new Promise(r => setTimeout(r, 300));
       }
-      return translatedChunks.join(' ');
+      return results.join(' ');
     } catch (error) {
       console.error('Translation error:', error);
       messages.textContent = 'Translation service unavailable. Showing English text.';
