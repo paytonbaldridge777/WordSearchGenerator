@@ -688,18 +688,28 @@
 
     try {
       const chunks = splitIntoChunks(text);
-      const translatedChunks = await Promise.all(
-        chunks.map(chunk => translateChunk(chunk, targetLang))
-      );
+      const translatedChunks = [];
+      for (let i = 0; i < chunks.length; i++) {
+        try {
+          const result = await translateChunk(chunks[i], targetLang);
+          translatedChunks.push(result);
+          // Small delay between requests to avoid MyMemory rate limiting
+          if (i < chunks.length - 1) await new Promise(r => setTimeout(r, 300));
+        } catch (chunkError) {
+          if (chunkError.message === 'quota') {
+            console.warn('Translation quota exceeded, using original text');
+            messages.textContent = 'Translation quota exceeded. Showing English text.';
+            return text;
+          }
+          // If a single chunk fails for any other reason, use the original chunk text
+          console.warn('Chunk translation failed, using original chunk:', chunkError);
+          translatedChunks.push(chunks[i]);
+        }
+      }
       return translatedChunks.join(' ');
     } catch (error) {
-      if (error.message === 'quota') {
-        console.warn('Translation quota exceeded, using original text');
-        messages.textContent = 'Translation quota exceeded. Showing English text.';
-      } else {
-        console.error('Translation error:', error);
-        messages.textContent = 'Translation service unavailable. Showing English text.';
-      }
+      console.error('Translation error:', error);
+      messages.textContent = 'Translation service unavailable. Showing English text.';
       return text; // Fallback to original text
     }
   }
@@ -737,19 +747,18 @@
   // Re-translate verses when language changes
   const languageSelect = el("languageSelect");
   languageSelect.addEventListener("change", async () => {
-    const currentVerse = verseInput.value.trim();
-    if (!currentVerse) return; // No verse to translate
-    
     const book = bookSelect.value;
     const chapter = chapterSelect.value;
     const selectedOptions = Array.from(verseSelect.selectedOptions);
-    
+
+    // Guard on actual verse selection, not verseInput (which may hold translated text)
     if (!selectedOptions.length || !book || !chapter) return;
-    
-    // Get original English text from Bible data
+
+    // Always re-fetch from the original English Bible data as the source
     const verseNums = selectedOptions.map(opt => opt.value);
     const verseTexts = verseNums.map(v => bibleData[book][chapter][v]);
     const originalText = verseTexts.join(" ");
+    if (!originalText.trim()) return;
     
     // Translate to new language
     const targetLang = languageSelect.value;
