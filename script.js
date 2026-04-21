@@ -654,13 +654,12 @@
     const url = `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|${targetLang}`;
     const response = await fetch(url);
     const data = await response.json();
-    const status = parseInt(data.responseStatus, 10);
-    if (status === 200 && data.responseData) {
-      return data.responseData.translatedText;
-    } else if (status === 403 || status === 429) {
-      throw new Error('quota');
+    if (data.responseStatus === 200 && data.responseData) {
+      return { success: true, text: data.responseData.translatedText };
+    } else if (data.responseStatus === 403) {
+      return { success: false, reason: 'quota' };
     } else {
-      throw new Error('failed');
+      return { success: false, reason: 'failed' };
     }
   }
 
@@ -691,21 +690,18 @@
       const chunks = splitIntoChunks(text);
       const translatedChunks = [];
       for (let i = 0; i < chunks.length; i++) {
-        try {
-          const result = await translateChunk(chunks[i], targetLang);
-          translatedChunks.push(result);
-          // Small delay between requests to avoid MyMemory rate limiting
-          if (i < chunks.length - 1) await new Promise(r => setTimeout(r, 300));
-        } catch (chunkError) {
-          if (chunkError.message === 'quota') {
-            console.warn('Translation quota exceeded, using original text');
-            messages.textContent = 'Translation quota exceeded. Showing English text.';
-            return text;
-          }
-          // If a single chunk fails for any other reason, use the original chunk text
-          console.warn('Chunk translation failed, using original chunk:', chunkError);
+        const result = await translateChunk(chunks[i], targetLang);
+        if (result.success) {
+          translatedChunks.push(result.text);
+        } else if (result.reason === 'quota') {
+          console.warn('Translation quota exceeded, using original text');
+          messages.textContent = 'Translation quota exceeded. Showing English text.';
+          return text;
+        } else {
+          console.warn('Chunk translation failed, using original chunk text');
           translatedChunks.push(chunks[i]);
         }
+        if (i < chunks.length - 1) await new Promise(r => setTimeout(r, 300));
       }
       return translatedChunks.join(' ');
     } catch (error) {
