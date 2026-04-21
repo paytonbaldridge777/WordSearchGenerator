@@ -1,4 +1,3 @@
-
 (() => {
   // ---------------- Theme Toggle ------------------
   const themeToggle = document.getElementById("themeToggle");
@@ -650,32 +649,57 @@
   });
 
   // ------------------ Translation Service ------------------
+  async function translateChunk(chunk, targetLang) {
+    const encodedText = encodeURIComponent(chunk);
+    const url = `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|${targetLang}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.responseStatus === 200 && data.responseData) {
+      return data.responseData.translatedText;
+    } else if (data.responseStatus === 403) {
+      throw new Error('quota');
+    } else {
+      throw new Error('failed');
+    }
+  }
+
+  function splitIntoChunks(text, maxLen = 450) {
+    // Split on word boundaries to stay under MyMemory's 500-char limit
+    const words = text.split(' ');
+    const chunks = [];
+    let current = '';
+    for (const word of words) {
+      const candidate = current ? current + ' ' + word : word;
+      if (candidate.length > maxLen) {
+        if (current) chunks.push(current);
+        current = word;
+      } else {
+        current = candidate;
+      }
+    }
+    if (current) chunks.push(current);
+    return chunks;
+  }
+
   async function translateText(text, targetLang) {
     if (targetLang === 'en' || !text) {
       return text; // No translation needed for English
     }
-    
+
     try {
-      const encodedText = encodeURIComponent(text);
-      const url = `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|${targetLang}`;
-      
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      if (data.responseStatus === 200 && data.responseData) {
-        return data.responseData.translatedText;
-      } else if (data.responseStatus === 403) {
+      const chunks = splitIntoChunks(text);
+      const translatedChunks = await Promise.all(
+        chunks.map(chunk => translateChunk(chunk, targetLang))
+      );
+      return translatedChunks.join(' ');
+    } catch (error) {
+      if (error.message === 'quota') {
         console.warn('Translation quota exceeded, using original text');
         messages.textContent = 'Translation quota exceeded. Showing English text.';
-        return text;
       } else {
-        console.warn('Translation failed, using original text');
-        messages.textContent = 'Translation unavailable. Showing English text.';
-        return text;
+        console.error('Translation error:', error);
+        messages.textContent = 'Translation service unavailable. Showing English text.';
       }
-    } catch (error) {
-      console.error('Translation error:', error);
-      messages.textContent = 'Translation service unavailable. Showing English text.';
       return text; // Fallback to original text
     }
   }
