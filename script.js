@@ -654,9 +654,10 @@
     const url = `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|${targetLang}`;
     const response = await fetch(url);
     const data = await response.json();
-    if (data.responseStatus === 200 && data.responseData) {
+    const status = parseInt(data.responseStatus, 10);
+    if (status === 200 && data.responseData) {
       return data.responseData.translatedText;
-    } else if (data.responseStatus === 403) {
+    } else if (status === 403 || status === 429) {
       throw new Error('quota');
     } else {
       throw new Error('failed');
