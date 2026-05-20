@@ -732,8 +732,11 @@
       btnSuggestWords.disabled = false;
     }
     
-    // Format reference as "Book Chapter:v1,v2,v3"
-    refInput.value = `${book} ${chapter}:${verseNums.join(",")}`;
+    // Format reference as "Book Chapter:v1" or "Book Chapter:v1-vN" for ranges
+    const firstVerse = verseNums[0];
+    const lastVerse = verseNums[verseNums.length - 1];
+    const verseRange = verseNums.length === 1 ? firstVerse : `${firstVerse}-${lastVerse}`;
+    refInput.value = `${book} ${chapter}:${verseRange}`;
   });
 
   // Re-translate verses when language changes
