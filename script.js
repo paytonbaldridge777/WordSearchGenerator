@@ -1007,7 +1007,7 @@
     // BUT only for words that were successfully placed
     const placedWordSet = new Set(placedWords || []);
     const used = new Set();
-    previewVerse.innerHTML = verse.split(/\b/).map(tok => {
+    const verseHTML = verse.split(/\b/).map(tok => {
       const up = tok.toUpperCase().replace(/[^A-Z]/g, "");
       if (placedWordSet.has(up) && !used.has(up)) {
         used.add(up);
@@ -1016,6 +1016,12 @@
       return tok;
     }).join("");
 
+    // Prepend the reference in bold+italic before the verse text
+    const refPrefix = reference
+      ? `<span style="font-weight:bold;font-style:italic">${reference} </span>`
+      : "";
+    previewVerse.innerHTML = refPrefix + verseHTML;
+
     // Apply verse font and line spacing
     previewVerse.style.fontFamily = verseFont;
     // Convert PDF spacing (inches) to a line-height multiplier
@@ -1023,7 +1029,7 @@
     const lineHeight = 1 + (lineSpacing * 2.33); // scaling factor
     previewVerse.style.lineHeight = lineHeight.toString();
 
-    previewRef.textContent = reference || "";
+    previewRef.textContent = "";
   }
 
   // ------------------ PDF helpers ------------------
@@ -1295,18 +1301,32 @@
       // BUT only for words that were successfully placed
       const placedWordSet = new Set(placed.map(p => p.word));
       const used = new Set();
-      const tokens = (opts.verse || "").split(/\s+/);
+
+      // Build token list: reference prefix (bold+italic) followed by verse words
+      const verseTokens = (opts.verse || "").split(/\s+/);
+      const tokens = [];
+      if (opts.reference) {
+        tokens.push({ text: opts.reference, bold: true, italic: true });
+      }
+      for (const raw of verseTokens) {
+        const up = raw.toUpperCase().replace(/[^A-Z]/g, "");
+        const bold = placedWordSet.has(up) && !used.has(up);
+        if (bold) used.add(up);
+        tokens.push({ text: raw, bold, italic: false });
+      }
+
       let line = [], lineW = 0;
       const maxW = innerW;
 
       function flushLine() {
         if (!line.length) return;
-        let cursorX = m.left;  // Start at left margin instead of center
+        let cursorX = m.left;
         for (const seg of line) {
-          doc.setFont(verseFont, seg.bold ? "bold" : "normal");
-          doc.setFontSize(verseFontSize);  // Use configured verse font size
+          const style = (seg.bold && seg.italic) ? "bolditalic" : seg.bold ? "bold" : "normal";
+          doc.setFont(verseFont, style);
+          doc.setFontSize(verseFontSize);
           doc.text(seg.text, cursorX, y, { baseline: "alphabetic" });
-          if (seg.bold) {
+          if (seg.bold && !seg.italic) {
             doc.setLineWidth(0.015);
             doc.line(cursorX, y + 0.03, cursorX + doc.getTextWidth(seg.text), y + 0.03);
           }
@@ -1315,22 +1335,13 @@
         y += (opts.lineSpacing || 0.3) * 4; line = []; lineW = 0;
       }
 
-      for (const raw of tokens) {
-        const up = raw.toUpperCase().replace(/[^A-Z]/g, "");
-        const bold = placedWordSet.has(up) && !used.has(up);
-        if (bold) used.add(up);
-        const w = doc.getTextWidth(raw + " ");
+      for (const tok of tokens) {
+        const w = doc.getTextWidth(tok.text + " ");
         if (lineW + w > maxW) flushLine();
-        line.push({ text: raw, bold });
+        line.push(tok);
         lineW += w;
       }
       flushLine();
-
-      if (opts.reference) {
-        doc.setFont(verseFont, "italic");
-        doc.setFontSize(verseFontSize);
-        doc.text(opts.reference, m.left, y + 0.3, { align: "left" });
-      }
     }
   }
 
