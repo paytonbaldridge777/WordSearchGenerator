@@ -726,26 +726,16 @@
     // Translate if needed
     const translatedText = await translateText(originalText, targetLang);
 
-    // Format reference -- translate the book name, keep chapter:verse numbers as-is
+    // Build reference: translate book name, keep chapter:verse numbers as-is
     const firstVerse = verseNums[0];
     const lastVerse = verseNums[verseNums.length - 1];
     const verseRange = verseNums.length === 1 ? firstVerse : `${firstVerse}-${lastVerse}`;
     const translatedBook = await translateText(book, targetLang);
     const refString = `${translatedBook} ${chapter}:${verseRange}`;
+
+    // Set both fields: reference box and verse box (with reference prepended)
     refInput.value = refString;
-
-    // Re-translate the book name in the reference for the new language
-    const book2 = bookSelect.value;
-    const chapter2 = chapterSelect.value;
-    const verseNums2 = selectedOptions.map(opt => opt.value);
-    const firstVerse2 = verseNums2[0];
-    const lastVerse2 = verseNums2[verseNums2.length - 1];
-    const verseRange2 = verseNums2.length === 1 ? firstVerse2 : `${firstVerse2}-${lastVerse2}`;
-    const translatedBook2 = await translateText(book2, targetLang);
-    refInput.value = `${translatedBook2} ${chapter2}:${verseRange2}`;
-
-    // Keep verse text clean (reference lives in refInput separately)
-    verseInput.value = translatedText;
+    verseInput.value = `${refString} ${translatedText}`;
 
     // Enable "Suggest Words" button when verse text is populated
     if (btnSuggestWords) {
@@ -773,22 +763,21 @@
     const targetLang = languageSelect.value;
     const translatedText = await translateText(originalText, targetLang);
 
-    // Re-translate the book name in the reference for the new language
-    const book2 = bookSelect.value;
-    const chapter2 = chapterSelect.value;
-    const verseNums2 = selectedOptions.map(opt => opt.value);
-    const firstVerse2 = verseNums2[0];
-    const lastVerse2 = verseNums2[verseNums2.length - 1];
-    const verseRange2 = verseNums2.length === 1 ? firstVerse2 : `${firstVerse2}-${lastVerse2}`;
-    const translatedBook2 = await translateText(book2, targetLang);
-    refInput.value = `${translatedBook2} ${chapter2}:${verseRange2}`;
+    // Re-build reference with translated book name
+    const firstVerse = verseNums[0];
+    const lastVerse = verseNums[verseNums.length - 1];
+    const verseRange = verseNums.length === 1 ? firstVerse : `${firstVerse}-${lastVerse}`;
+    const translatedBook = await translateText(book, targetLang);
+    const refString = `${translatedBook} ${chapter}:${verseRange}`;
 
-    // Keep verse text clean (reference lives in refInput separately)
-    verseInput.value = translatedText;
+    // Set both fields: reference box and verse box (with reference prepended)
+    refInput.value = refString;
+    verseInput.value = `${refString} ${translatedText}`;
 
     // Update preview if it exists
     if (lastState) {
       lastState.verse = verseInput.value;
+      lastState.reference = refString;
       const placedWords = lastState.placed.map(p => p.word);
       renderPreview(lastState.title, lastState.grid, lastState.verse, lastState.reference, lastState.lineSpacing, placedWords);
     }
@@ -1045,11 +1034,7 @@
       return tok;
     }).join("");
 
-    // Prepend reference in bold+italic before the verse text
-    const refPrefix = reference
-      ? `<span style="font-weight:bold;font-style:italic">${reference} </span>`
-      : "";
-    previewVerse.innerHTML = refPrefix + verseHTML;
+    previewVerse.innerHTML = verseHTML;
 
     // Apply verse font and line spacing
     previewVerse.style.fontFamily = verseFont;
@@ -1331,12 +1316,9 @@
       const placedWordSet = new Set(placed.map(p => p.word));
       const used = new Set();
 
-      // Build token list: reference first (bold+italic), then verse words
+      // Build token list from verse text (reference already prepended in verseInput)
       const verseTokens = (opts.verse || "").split(/\s+/);
       const tokens = [];
-      if (opts.reference) {
-        tokens.push({ text: opts.reference, bold: true, italic: true });
-      }
       for (const raw of verseTokens) {
         const up = raw.toUpperCase().replace(/[^A-Z]/g, "");
         const bold = placedWordSet.has(up) && !used.has(up);
@@ -1351,11 +1333,10 @@
         if (!line.length) return;
         let cursorX = m.left;
         for (const seg of line) {
-          const style = (seg.bold && seg.italic) ? "bolditalic" : seg.bold ? "bold" : "normal";
-          doc.setFont(verseFont, style);
+          doc.setFont(verseFont, seg.bold ? "bold" : "normal");
           doc.setFontSize(verseFontSize);
           doc.text(seg.text, cursorX, y, { baseline: "alphabetic" });
-          if (seg.bold && !seg.italic) {
+          if (seg.bold) {
             doc.setLineWidth(0.015);
             doc.line(cursorX, y + 0.03, cursorX + doc.getTextWidth(seg.text), y + 0.03);
           }
