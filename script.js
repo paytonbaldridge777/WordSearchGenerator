@@ -726,12 +726,23 @@
     // Translate if needed
     const translatedText = await translateText(originalText, targetLang);
 
-    // Format reference (always English book/chapter/verse notation)
+    // Format reference -- translate the book name, keep chapter:verse numbers as-is
     const firstVerse = verseNums[0];
     const lastVerse = verseNums[verseNums.length - 1];
     const verseRange = verseNums.length === 1 ? firstVerse : `${firstVerse}-${lastVerse}`;
-    const refString = `${book} ${chapter}:${verseRange}`;
+    const translatedBook = await translateText(book, targetLang);
+    const refString = `${translatedBook} ${chapter}:${verseRange}`;
     refInput.value = refString;
+
+    // Re-translate the book name in the reference for the new language
+    const book2 = bookSelect.value;
+    const chapter2 = chapterSelect.value;
+    const verseNums2 = selectedOptions.map(opt => opt.value);
+    const firstVerse2 = verseNums2[0];
+    const lastVerse2 = verseNums2[verseNums2.length - 1];
+    const verseRange2 = verseNums2.length === 1 ? firstVerse2 : `${firstVerse2}-${lastVerse2}`;
+    const translatedBook2 = await translateText(book2, targetLang);
+    refInput.value = `${translatedBook2} ${chapter2}:${verseRange2}`;
 
     // Keep verse text clean (reference lives in refInput separately)
     verseInput.value = translatedText;
@@ -761,6 +772,16 @@
     // Translate to new language
     const targetLang = languageSelect.value;
     const translatedText = await translateText(originalText, targetLang);
+
+    // Re-translate the book name in the reference for the new language
+    const book2 = bookSelect.value;
+    const chapter2 = chapterSelect.value;
+    const verseNums2 = selectedOptions.map(opt => opt.value);
+    const firstVerse2 = verseNums2[0];
+    const lastVerse2 = verseNums2[verseNums2.length - 1];
+    const verseRange2 = verseNums2.length === 1 ? firstVerse2 : `${firstVerse2}-${lastVerse2}`;
+    const translatedBook2 = await translateText(book2, targetLang);
+    refInput.value = `${translatedBook2} ${chapter2}:${verseRange2}`;
 
     // Keep verse text clean (reference lives in refInput separately)
     verseInput.value = translatedText;
