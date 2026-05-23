@@ -733,8 +733,8 @@
     const refString = `${book} ${chapter}:${verseRange}`;
     refInput.value = refString;
 
-    // Prepend reference into the verse text box
-    verseInput.value = `${refString} ${translatedText}`;
+    // Keep verse text clean (reference lives in refInput separately)
+    verseInput.value = translatedText;
 
     // Enable "Suggest Words" button when verse text is populated
     if (btnSuggestWords) {
@@ -762,9 +762,8 @@
     const targetLang = languageSelect.value;
     const translatedText = await translateText(originalText, targetLang);
 
-    // Re-use existing reference from refInput (format never changes)
-    const refString = refInput.value;
-    verseInput.value = refString ? `${refString} ${translatedText}` : translatedText;
+    // Keep verse text clean (reference lives in refInput separately)
+    verseInput.value = translatedText;
 
     // Update preview if it exists
     if (lastState) {
@@ -1025,7 +1024,11 @@
       return tok;
     }).join("");
 
-    previewVerse.innerHTML = verseHTML;
+    // Prepend reference in bold+italic before the verse text
+    const refPrefix = reference
+      ? `<span style="font-weight:bold;font-style:italic">${reference} </span>`
+      : "";
+    previewVerse.innerHTML = refPrefix + verseHTML;
 
     // Apply verse font and line spacing
     previewVerse.style.fontFamily = verseFont;
@@ -1307,9 +1310,12 @@
       const placedWordSet = new Set(placed.map(p => p.word));
       const used = new Set();
 
-      // Build token list from verse text (reference is already prepended in verseInput)
+      // Build token list: reference first (bold+italic), then verse words
       const verseTokens = (opts.verse || "").split(/\s+/);
       const tokens = [];
+      if (opts.reference) {
+        tokens.push({ text: opts.reference, bold: true, italic: true });
+      }
       for (const raw of verseTokens) {
         const up = raw.toUpperCase().replace(/[^A-Z]/g, "");
         const bold = placedWordSet.has(up) && !used.has(up);
@@ -1324,10 +1330,11 @@
         if (!line.length) return;
         let cursorX = m.left;
         for (const seg of line) {
-          doc.setFont(verseFont, seg.bold ? "bold" : "normal");
+          const style = (seg.bold && seg.italic) ? "bolditalic" : seg.bold ? "bold" : "normal";
+          doc.setFont(verseFont, style);
           doc.setFontSize(verseFontSize);
           doc.text(seg.text, cursorX, y, { baseline: "alphabetic" });
-          if (seg.bold) {
+          if (seg.bold && !seg.italic) {
             doc.setLineWidth(0.015);
             doc.line(cursorX, y + 0.03, cursorX + doc.getTextWidth(seg.text), y + 0.03);
           }
