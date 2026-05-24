@@ -557,8 +557,20 @@ def format_scripture_ref(ref, lang="en"):
 # Puzzle metrics extraction
 # ---------------------------------------------------------------------------
 
-# Regex that matches a scripture reference like "1 Pedro 1:12-15" or "Salmos 23:1,2,3"
+# Matches a standalone reference line at the bottom (old format): "1 Pedro 1:12-15"
 _REF_RE = re.compile(r'^.{1,40}\d+:\d[\d,\-]*$')
+
+# Matches a reference embedded at the start of verse text (new format):
+# "Reflexion sobre 1 Pedro 1:12-15:La..." or "1 Pedro 1:1-6 Pedro, apostol..."
+_REF_INLINE_RE = re.compile(
+    r'^(?:Reflexi[oó]n\s+sobre\s+|Reflection\s+on\s+)?'
+    r'(.{1,40}?\d+:\d[\d,\-]*)'
+    r'(?:[:,\s]|$)'
+)
+
+# Grid bottom: last row of letter grid sits above this Y (top-origin coords)
+_GRID_BOTTOM_TOP = 470
+
 
 def extract_puzzle_metrics(puzzle_path, lang="en"):
     """
@@ -566,10 +578,12 @@ def extract_puzzle_metrics(puzzle_path, lang="en"):
     Returns (text, src_ref_top_from_bottom, src_ref_bot_from_bottom,
              src_content_top_from_bottom)
 
-    Detects whether the bottom-most line is a standalone scripture reference
-    (old puzzle format) or regular verse text (new format where the reference
-    is baked into the verse body). If it looks like verse text, returns empty
-    string so no erase/redraw is attempted.
+    Handles two formats:
+    - Old format: reference is a standalone line at the very bottom.
+      Detected, erased from that position, and redrawn at fixed Y.
+    - New format: reference is baked into the first line of verse text.
+      Extracted from there for redrawing; nothing is erased.
+      Returns src_ref_top/bot = 0 to signal no erase needed.
     """
     import pdfplumber
     with pdfplumber.open(str(puzzle_path)) as pdf:
@@ -577,25 +591,40 @@ def extract_puzzle_metrics(puzzle_path, lang="en"):
         words = page.extract_words()
         if not words:
             return "", 0, 0, 0
+
+        min_top = min(w['top'] for w in words)
+        src_content_top = PAGE_H - min_top
+
+        # --- Check bottom line for old-format standalone reference ---
         max_top = max(w['top'] for w in words)
         bottom_words = [w for w in words if abs(w['top'] - max_top) < 2]
         bottom_words.sort(key=lambda w: w['x0'])
-        raw_text = " ".join(w['text'] for w in bottom_words)
+        raw_bottom = " ".join(w['text'] for w in bottom_words)
 
-        # Only treat the bottom line as a scripture reference if it looks like one.
-        # New-format PDFs have the reference baked into the verse body, so the
-        # bottom-most line will be regular sentence text -- skip it in that case.
-        if not _REF_RE.match(raw_text.strip()):
-            min_top = min(w['top'] for w in words)
-            src_content_top = PAGE_H - min_top
-            return "", 0, 0, src_content_top
+        if _REF_RE.match(raw_bottom.strip()):
+            # Old format: standalone reference at bottom
+            text = format_scripture_ref(raw_bottom, lang)
+            src_ref_top = PAGE_H - max_top
+            src_ref_bot = PAGE_H - max(w['bottom'] for w in bottom_words)
+            return text, src_ref_top, src_ref_bot, src_content_top
 
-        text = format_scripture_ref(raw_text, lang)
-        src_ref_top = PAGE_H - max_top
-        src_ref_bot = PAGE_H - max(w['bottom'] for w in bottom_words)
-        min_top = min(w['top'] for w in words)
-        src_content_top = PAGE_H - min_top
-        return text, src_ref_top, src_ref_bot, src_content_top
+        # --- New format: scan first verse line for embedded reference ---
+        verse_words = [w for w in words if w['top'] > _GRID_BOTTOM_TOP]
+        if verse_words:
+            first_line_top = min(w['top'] for w in verse_words)
+            first_line = sorted(
+                [w for w in verse_words if abs(w['top'] - first_line_top) < 2],
+                key=lambda w: w['x0']
+            )
+            first_line_text = " ".join(w['text'] for w in first_line)
+            m = _REF_INLINE_RE.match(first_line_text)
+            if m:
+                raw_ref = m.group(1)
+                text = format_scripture_ref(raw_ref, lang)
+                # src_ref_top/bot = 0 signals: no erase needed
+                return text, 0, 0, src_content_top
+
+        return "", 0, 0, src_content_top
 
 
 # ---------------------------------------------------------------------------
@@ -646,13 +675,16 @@ def add_solution_reference(puzzle_path, solution_page_number, output_buffer, lan
     ov = io.BytesIO()
     c = rl_canvas.Canvas(ov, pagesize=(PAGE_W, PAGE_H))
 
-    # Old format: erase the original reference line and redraw at fixed Y
-    if scripture_ref:
+    # Old format (src_ref_top > 0): erase the original reference line and redraw at fixed Y
+    # New format (src_ref_top == 0): reference baked into verse text, just draw it at fixed Y
+    if scripture_ref and src_ref_top > 0:
         dest_ref_bottom = SCALE * src_ref_bot + ty - 2
         dest_ref_top    = SCALE * src_ref_top + ty + 4
         c.setFillColorRGB(1, 1, 1)
         c.rect(0, dest_ref_bottom, PAGE_W, dest_ref_top - dest_ref_bottom, stroke=0, fill=1)
         c.rect(0, 0, PAGE_W, dest_ref_bottom + 1, stroke=0, fill=1)
+
+    if scripture_ref:
         c.setFont(REF_FONT, REF_FONT_SIZE)
         c.setFillGray(0.0)
         c.drawString(MARGIN_L, Y_REF, scripture_ref)
