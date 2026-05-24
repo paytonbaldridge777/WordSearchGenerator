@@ -557,11 +557,19 @@ def format_scripture_ref(ref, lang="en"):
 # Puzzle metrics extraction
 # ---------------------------------------------------------------------------
 
+# Regex that matches a scripture reference like "1 Pedro 1:12-15" or "Salmos 23:1,2,3"
+_REF_RE = re.compile(r'^.{1,40}\d+:\d[\d,\-]*$')
+
 def extract_puzzle_metrics(puzzle_path, lang="en"):
     """
     Extracts scripture reference text and position metrics from a puzzle PDF.
     Returns (text, src_ref_top_from_bottom, src_ref_bot_from_bottom,
              src_content_top_from_bottom)
+
+    Detects whether the bottom-most line is a standalone scripture reference
+    (old puzzle format) or regular verse text (new format where the reference
+    is baked into the verse body). If it looks like verse text, returns empty
+    string so no erase/redraw is attempted.
     """
     import pdfplumber
     with pdfplumber.open(str(puzzle_path)) as pdf:
@@ -573,6 +581,15 @@ def extract_puzzle_metrics(puzzle_path, lang="en"):
         bottom_words = [w for w in words if abs(w['top'] - max_top) < 2]
         bottom_words.sort(key=lambda w: w['x0'])
         raw_text = " ".join(w['text'] for w in bottom_words)
+
+        # Only treat the bottom line as a scripture reference if it looks like one.
+        # New-format PDFs have the reference baked into the verse body, so the
+        # bottom-most line will be regular sentence text -- skip it in that case.
+        if not _REF_RE.match(raw_text.strip()):
+            min_top = min(w['top'] for w in words)
+            src_content_top = PAGE_H - min_top
+            return "", 0, 0, src_content_top
+
         text = format_scripture_ref(raw_text, lang)
         src_ref_top = PAGE_H - max_top
         src_ref_bot = PAGE_H - max(w['bottom'] for w in bottom_words)
@@ -587,8 +604,12 @@ def extract_puzzle_metrics(puzzle_path, lang="en"):
 
 def add_solution_reference(puzzle_path, solution_page_number, output_buffer, lang="en"):
     """Scale the puzzle page and stamp the solution page reference at the bottom.
-    The scripture reference is now baked into the verse text in the puzzle PDF,
-    so no detection, erasing, or redrawing of a reference line is needed.
+
+    Handles two puzzle formats:
+    - Old format: scripture reference is a standalone line at the bottom of the PDF.
+      It is detected, erased, and redrawn at a fixed Y alongside the solution ref.
+    - New format: reference is baked into the verse body text. The bottom line is
+      regular sentence text, so nothing is erased -- only the solution ref is stamped.
     """
     S = STRINGS[lang]
 
@@ -596,8 +617,13 @@ def add_solution_reference(puzzle_path, solution_page_number, output_buffer, lan
     TY_FIXED      = 62.0 - SCALE * 11.8
     SOL_FONT      = "MySans-Italic"
     SOL_FONT_SIZE = 13
+    REF_FONT      = "MySans-Italic"
+    REF_FONT_SIZE = 18
+    MARGIN_L      = 72
     MARGIN_R      = 72
-    Y_SOL         = 40   # from bottom of page
+    Y_REF         = 40
+
+    scripture_ref, src_ref_top, src_ref_bot, src_content_top = extract_puzzle_metrics(puzzle_path, lang)
 
     # White base page
     base_buf = io.BytesIO()
@@ -610,20 +636,33 @@ def add_solution_reference(puzzle_path, solution_page_number, output_buffer, lan
     base_page = PdfReader(base_buf).pages[0]
 
     # Scale and position the puzzle page
+    ty = TY_FIXED
     x_offset = (PAGE_W - PAGE_W * SCALE) / 2
     base_page.merge_transformed_page(
         PdfReader(str(puzzle_path)).pages[0],
-        (SCALE, 0, 0, SCALE, x_offset, TY_FIXED)
+        (SCALE, 0, 0, SCALE, x_offset, ty)
     )
 
-    # Overlay: "Solution on page N" at bottom-right
     ov = io.BytesIO()
     c = rl_canvas.Canvas(ov, pagesize=(PAGE_W, PAGE_H))
+
+    # Old format: erase the original reference line and redraw at fixed Y
+    if scripture_ref:
+        dest_ref_bottom = SCALE * src_ref_bot + ty - 2
+        dest_ref_top    = SCALE * src_ref_top + ty + 4
+        c.setFillColorRGB(1, 1, 1)
+        c.rect(0, dest_ref_bottom, PAGE_W, dest_ref_top - dest_ref_bottom, stroke=0, fill=1)
+        c.rect(0, 0, PAGE_W, dest_ref_bottom + 1, stroke=0, fill=1)
+        c.setFont(REF_FONT, REF_FONT_SIZE)
+        c.setFillGray(0.0)
+        c.drawString(MARGIN_L, Y_REF, scripture_ref)
+
+    # Both formats: stamp "Solution on page N" at bottom-right
     c.setFont(SOL_FONT, SOL_FONT_SIZE)
     c.setFillGray(0.0)
     sol_text = f"({S['solution_ref']} {solution_page_number})"
     tw = c.stringWidth(sol_text, SOL_FONT, SOL_FONT_SIZE)
-    c.drawString(PAGE_W - MARGIN_R - tw, Y_SOL, sol_text)
+    c.drawString(PAGE_W - MARGIN_R - tw, Y_REF, sol_text)
     c.save()
     ov.seek(0)
     base_page.merge_page(PdfReader(ov).pages[0])
