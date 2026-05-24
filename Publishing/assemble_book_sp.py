@@ -586,23 +586,20 @@ def extract_puzzle_metrics(puzzle_path, lang="en"):
 # ---------------------------------------------------------------------------
 
 def add_solution_reference(puzzle_path, solution_page_number, output_buffer, lang="en"):
+    """Scale the puzzle page and stamp the solution page reference at the bottom.
+    The scripture reference is now baked into the verse text in the puzzle PDF,
+    so no detection, erasing, or redrawing of a reference line is needed.
+    """
     S = STRINGS[lang]
 
-    SCALE        = 0.9376
-    TY_FIXED     = 62.0 - SCALE * 11.8
-    BOTTOM_CLEAR = 62.0
-
+    SCALE         = 0.9376
+    TY_FIXED      = 62.0 - SCALE * 11.8
     SOL_FONT      = "MySans-Italic"
     SOL_FONT_SIZE = 13
-    REF_FONT      = "MySans-Italic"
-    REF_FONT_SIZE = 18
-    MARGIN_L      = 72
     MARGIN_R      = 72
-    Y_REF         = 40
-    Y_PAGENUM     = 58
+    Y_SOL         = 40   # from bottom of page
 
-    scripture_ref, src_ref_top, src_ref_bot, src_content_top = extract_puzzle_metrics(puzzle_path, lang)
-
+    # White base page
     base_buf = io.BytesIO()
     bc = rl_canvas.Canvas(base_buf, pagesize=(PAGE_W, PAGE_H))
     bc.setFillColorRGB(1, 1, 1)
@@ -612,34 +609,21 @@ def add_solution_reference(puzzle_path, solution_page_number, output_buffer, lan
     base_buf.seek(0)
     base_page = PdfReader(base_buf).pages[0]
 
-    ty = TY_FIXED
+    # Scale and position the puzzle page
     x_offset = (PAGE_W - PAGE_W * SCALE) / 2
-    puzzle_reader = PdfReader(str(puzzle_path))
     base_page.merge_transformed_page(
-        puzzle_reader.pages[0],
-        (SCALE, 0, 0, SCALE, x_offset, ty)
+        PdfReader(str(puzzle_path)).pages[0],
+        (SCALE, 0, 0, SCALE, x_offset, TY_FIXED)
     )
 
+    # Overlay: "Solution on page N" at bottom-right
     ov = io.BytesIO()
     c = rl_canvas.Canvas(ov, pagesize=(PAGE_W, PAGE_H))
-
-    dest_ref_bottom = SCALE * src_ref_bot + ty - 2
-    dest_ref_top    = SCALE * src_ref_top + ty + 4
-    c.setFillColorRGB(1, 1, 1)
-    c.rect(0, dest_ref_bottom, PAGE_W, dest_ref_top - dest_ref_bottom, stroke=0, fill=1)
-    c.rect(0, 0, PAGE_W, dest_ref_bottom + 1, stroke=0, fill=1)
-
-    if scripture_ref:
-        c.setFont(REF_FONT, REF_FONT_SIZE)
-        c.setFillGray(0.0)
-        c.drawString(MARGIN_L, Y_REF, scripture_ref)
-
     c.setFont(SOL_FONT, SOL_FONT_SIZE)
     c.setFillGray(0.0)
     sol_text = f"({S['solution_ref']} {solution_page_number})"
     tw = c.stringWidth(sol_text, SOL_FONT, SOL_FONT_SIZE)
-    c.drawString(PAGE_W - MARGIN_R - tw, Y_REF, sol_text)
-
+    c.drawString(PAGE_W - MARGIN_R - tw, Y_SOL, sol_text)
     c.save()
     ov.seek(0)
     base_page.merge_page(PdfReader(ov).pages[0])
