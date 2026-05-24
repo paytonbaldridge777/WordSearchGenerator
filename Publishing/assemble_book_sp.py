@@ -558,7 +558,8 @@ def format_scripture_ref(ref, lang="en"):
 # ---------------------------------------------------------------------------
 
 # Matches a standalone reference line at the bottom (old format): "1 Pedro 1:12-15"
-_REF_RE = re.compile(r'^.{1,40}\d+:\d[\d,\-]*$')
+# Allows optional space after colon: "Hebrews 6: 16,17,18,19"
+_REF_RE = re.compile(r'^.{1,40}\d+:\s?\d[\d,\- ]*$')
 
 # Matches a reference embedded at the start of verse text (new format):
 # "Reflexion sobre 1 Pedro 1:12-15:La..." or "1 Pedro 1:1-6 Pedro, apostol..."
@@ -675,15 +676,16 @@ def add_solution_reference(puzzle_path, solution_page_number, output_buffer, lan
     ov = io.BytesIO()
     c = rl_canvas.Canvas(ov, pagesize=(PAGE_W, PAGE_H))
 
-    # Old format (src_ref_top > 0): erase the original reference line and redraw at fixed Y
-    # New format (src_ref_top == 0): reference baked into verse text, just draw it at fixed Y
-    if scripture_ref and src_ref_top > 0:
-        dest_ref_bottom = SCALE * src_ref_bot + ty - 2
-        dest_ref_top    = SCALE * src_ref_top + ty + 4
+    # Old format: we have the exact position of the original reference line.
+    # White out just that band (with generous padding) to erase it cleanly.
+    # Do NOT use a second rect sweeping from 0 upward -- that would cover Y_REF.
+    if src_ref_top > 0:
+        dest_ref_bottom = SCALE * src_ref_bot + ty - 4
+        dest_ref_top    = SCALE * src_ref_top + ty + 6
         c.setFillColorRGB(1, 1, 1)
         c.rect(0, dest_ref_bottom, PAGE_W, dest_ref_top - dest_ref_bottom, stroke=0, fill=1)
-        c.rect(0, 0, PAGE_W, dest_ref_bottom + 1, stroke=0, fill=1)
 
+    # Draw the reference at fixed Y bottom-left (both formats)
     if scripture_ref:
         c.setFont(REF_FONT, REF_FONT_SIZE)
         c.setFillGray(0.0)
