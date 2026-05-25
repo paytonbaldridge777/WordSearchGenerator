@@ -561,12 +561,12 @@ def format_scripture_ref(ref, lang="en"):
 # Allows optional space after colon: "Hebrews 6: 16,17,18,19"
 _REF_RE = re.compile(r'^.{1,40}\d+:\s?\d[\d,\- ]*$')
 
-# Matches a reference embedded at the start of verse text (new format):
-# "Reflexion sobre 1 Pedro 1:12-15:La..." or "1 Pedro 1:1-6 Pedro, apostol..."
+# Extracts book+chapter:verse from anywhere in a line (new format).
+# Handles prefixes like "Reflection for", "Reflexion sobre", plain references, etc.
 _REF_INLINE_RE = re.compile(
-    r'^(?:Reflexi[oó]n\s+sobre\s+|Reflection\s+on\s+)?'
-    r'(.{1,40}?\d+:\d[\d,\-]*)'
-    r'(?:[:,\s]|$)'
+    r'(?:^|\s)(\d?\s?[A-Z][a-zA-Záéíóúüñ]+'
+    r'(?:\s[A-Z][a-zA-Záéíóúüñ]+)*'
+    r'\s+\d+:\s?\d[\d,\-\s]*)'
 )
 
 # Grid bottom: last row of letter grid sits above this Y (top-origin coords)
@@ -618,9 +618,9 @@ def extract_puzzle_metrics(puzzle_path, lang="en"):
                 key=lambda w: w['x0']
             )
             first_line_text = " ".join(w['text'] for w in first_line)
-            m = _REF_INLINE_RE.match(first_line_text)
+            m = _REF_INLINE_RE.search(first_line_text)
             if m:
-                raw_ref = m.group(1)
+                raw_ref = re.sub(r'[\s\-]+$', '', m.group(1).strip())
                 text = format_scripture_ref(raw_ref, lang)
                 # src_ref_top/bot = 0 signals: no erase needed
                 return text, 0, 0, src_content_top
