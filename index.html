@@ -275,6 +275,136 @@
     .word-chip.added:hover {
       transform: none;
     }
+
+    /* ── Book Panel ─────────────────────────────────────────── */
+    #bookPanel {
+      border: 2px solid var(--accent-color);
+      margin-bottom: 24px;
+    }
+    #bookPanel legend {
+      color: var(--accent-color);
+    }
+    #bookMeta {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    #bookMetaTitle {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    #bookMetaAuthor {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    #bookMeta.hidden { display: none; }
+    #bookNoProject {
+      font-style: italic;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+    #bookNoProject.hidden { display: none; }
+    .book-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .book-btn-row button {
+      width: auto;
+      margin: 0;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+    }
+    /* Puzzle list */
+    #puzzleList {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 260px;
+      overflow-y: auto;
+      border: 1px solid var(--border-primary);
+      border-radius: 8px;
+    }
+    #puzzleList.hidden { display: none; }
+    #puzzleListEmpty {
+      padding: 12px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-style: italic;
+      font-size: 0.9rem;
+    }
+    .puzzle-list-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-primary);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .puzzle-list-item:last-child { border-bottom: none; }
+    .puzzle-list-item:hover { background: var(--select-bg); }
+    .puzzle-list-item.active {
+      background: rgba(37,99,235,0.12);
+      border-left: 3px solid var(--accent-color);
+    }
+    .pli-num {
+      font-weight: 700;
+      font-size: 0.85rem;
+      min-width: 28px;
+      color: var(--accent-color);
+    }
+    .pli-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      padding: 0;
+      width: 100%;
+      cursor: text;
+    }
+    .pli-label:focus {
+      outline: 1px dashed var(--accent-color);
+      border-radius: 3px;
+    }
+    .pli-ref {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .pli-delete {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0 4px;
+      margin: 0;
+      width: auto;
+      box-shadow: none;
+      line-height: 1;
+    }
+    .pli-delete:hover { color: var(--error-text); }
+    /* Editor book buttons */
+    #bookEditorActions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    #bookEditorActions button {
+      width: auto;
+      margin: 0;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
@@ -284,6 +414,34 @@
       <h1>Bible Word Search Generator</h1>
       <button id="themeToggle">🌙 Dark</button>
     </div>
+
+    <!-- ══ BOOK PANEL ══════════════════════════════════════════ -->
+    <fieldset id="bookPanel">
+      <legend class="collapsible-legend" id="bookPanelLegend">📖 Book Project</legend>
+      <div class="fieldset-content expanded" id="bookPanelContent">
+
+        <div id="bookNoProject">No book open. Create a new book or open an existing one.</div>
+
+        <div id="bookMeta" class="hidden">
+          <span id="bookMetaTitle"></span>
+          <span id="bookMetaAuthor"></span>
+          <span id="bookPuzzleCount" style="font-size:0.85rem;color:var(--text-secondary);"></span>
+        </div>
+
+        <div class="book-btn-row">
+          <button id="btnNewBook" type="button">＋ New Book</button>
+          <button id="btnOpenBook" type="button" class="secondary">📂 Open Book</button>
+          <input id="bookFileInput" type="file" accept=".json" style="display:none" />
+          <button id="btnSaveBook" type="button" class="secondary" disabled>💾 Save Book</button>
+          <button id="btnCloseBook" type="button" class="secondary" disabled>✕ Close Book</button>
+        </div>
+
+        <ul id="puzzleList" class="hidden">
+          <li id="puzzleListEmpty">No puzzles yet. Generate a puzzle and click "Add to Book".</li>
+        </ul>
+
+      </div>
+    </fieldset>
 
     <fieldset>
       <legend>Bible Version</legend>
@@ -448,10 +606,12 @@
 
     <button id="btnGenerate">Generate Preview</button>
     <button id="btnExport" class="secondary" disabled>Export PDFs</button>
-    <button id="btnSaveSettings" class="secondary" disabled>Save Settings</button>
-    <button id="btnLoadSettings" class="secondary">Load Settings</button>
-    <input id="settingsFileInput" type="file" accept=".json" style="display:none" />
     <button id="btnClear" class="secondary">Clear</button>
+
+    <div id="bookEditorActions">
+      <button id="btnAddToBook" type="button" class="secondary" disabled>＋ Add to Book</button>
+      <button id="btnUpdateInBook" type="button" class="secondary" disabled>↺ Update in Book</button>
+    </div>
 
     <div id="messages"></div>
 
@@ -469,6 +629,13 @@
         this.classList.toggle('expanded');
         document.getElementById('variablesContent').classList.toggle('expanded');
       });
+      // Collapsible Book Panel
+      document.getElementById('bookPanelLegend').addEventListener('click', function() {
+        this.classList.toggle('expanded');
+        document.getElementById('bookPanelContent').classList.toggle('expanded');
+      });
+      // Start book panel legend as expanded (no arrow)
+      document.getElementById('bookPanelLegend').classList.add('expanded');
     </script>
     <script src="script.js"></script>
   </div>

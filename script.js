@@ -1444,7 +1444,6 @@
     }
     
     btnExport.disabled = false;
-    if (el("btnSaveSettings")) el("btnSaveSettings").disabled = false;
 
     lastState = { 
       title, grid, placed, verse, reference, words, lineSpacing,
@@ -1570,20 +1569,43 @@
     suggestedWordsContainer.style.display = "none";
     suggestedWordsChips.innerHTML = "";
     btnExport.disabled = true;
-    if (el("btnSaveSettings")) el("btnSaveSettings").disabled = true;
     lastState = null;
   });
 
-  // ------------------ Save / Load Settings ------------------
+})();
+  // ══════════════════════════════════════════════════════════════
+  // BOOK PROJECT MANAGEMENT
+  // ══════════════════════════════════════════════════════════════
 
-  function buildSettingsJSON() {
+  // ── State ────────────────────────────────────────────────────
+  let book = null;          // { version, bookTitle, author, puzzles: [...] }
+  let activePuzzleIndex = null;  // index into book.puzzles of loaded puzzle, or null
+
+  // ── DOM refs ─────────────────────────────────────────────────
+  const btnNewBook       = el("btnNewBook");
+  const btnOpenBook      = el("btnOpenBook");
+  const bookFileInput    = el("bookFileInput");
+  const btnSaveBook      = el("btnSaveBook");
+  const btnCloseBook     = el("btnCloseBook");
+  const btnAddToBook     = el("btnAddToBook");
+  const btnUpdateInBook  = el("btnUpdateInBook");
+  const bookNoProject    = el("bookNoProject");
+  const bookMeta         = el("bookMeta");
+  const bookMetaTitle    = el("bookMetaTitle");
+  const bookMetaAuthor   = el("bookMetaAuthor");
+  const bookPuzzleCount  = el("bookPuzzleCount");
+  const puzzleListEl     = el("puzzleList");
+  const puzzleListEmpty  = el("puzzleListEmpty");
+
+  // ── Helpers ──────────────────────────────────────────────────
+
+  function puzzleFromState() {
     if (!lastState) return null;
     return {
-      version: 1,
-      title:               lastState.title,
-      verse:               lastState.verse,
-      reference:           lastState.reference,
-      words:               lastState.words,
+      label:               lastState.title || "",
+      verse:               lastState.verse || "",
+      reference:           lastState.reference || "",
+      words:               lastState.words || [],
       gridSize:            lastState.grid ? lastState.grid.length : parseInt(sizeInput.value, 10),
       titleFont:           lastState.titleFont,
       puzzleFont:          lastState.puzzleFont,
@@ -1601,71 +1623,244 @@
     };
   }
 
-  function applySettingsJSON(s) {
-    if (!s || s.version !== 1) { alert("Unrecognised settings file."); return; }
-    if (titleInput)           titleInput.value           = s.title        || "";
-    if (verseInput)           verseInput.value           = s.verse        || "";
-    if (refInput)             refInput.value             = s.reference    || "";
-    if (wordsInput)           wordsInput.value           = (s.words || []).join(", ");
-    if (sizeInput)            sizeInput.value            = s.gridSize     || 14;
-    if (titleFontInput)       titleFontInput.value       = s.titleFont    || DEFAULT_TITLE_FONT;
-    if (puzzleFontInput)      puzzleFontInput.value      = s.puzzleFont   || DEFAULT_PUZZLE_FONT;
-    if (verseFontInput)       verseFontInput.value       = s.verseFont    || DEFAULT_VERSE_FONT;
-    if (titleFontSizeInput)   titleFontSizeInput.value   = s.titleFontSize       || 22;
-    if (verseFontSizeInput)   verseFontSizeInput.value   = s.verseFontSize       || 18;
-    if (puzzleLetterFontSizeInput) puzzleLetterFontSizeInput.value = s.puzzleLetterFontSize || 66;
-    if (puzzleSizeMultiplierInput) puzzleSizeMultiplierInput.value = s.puzzleSizeMultiplier || 0.88;
-    if (puzzleVerseSpacingInput)   puzzleVerseSpacingInput.value   = s.puzzleVerseSpacing   || 0.75;
-    if (lineSpacingInput)     lineSpacingInput.value     = s.lineSpacing   || 0.3;
-    if (marginTopInput)       marginTopInput.value       = s.marginTop    || 0.6;
-    if (marginLeftInput)      marginLeftInput.value      = s.marginLeft   || 0.6;
-    if (marginRightInput)     marginRightInput.value     = s.marginRight  || 0.6;
-    if (marginBottomInput)    marginBottomInput.value    = s.marginBottom || 0.6;
-    messages.textContent = "Settings loaded -- click Generate Preview to rebuild the puzzle.";
-    messages.style.color = "var(--text-primary)";
+  function applyPuzzle(p) {
+    if (titleInput)                titleInput.value                = p.label               || "";
+    if (verseInput)                verseInput.value                = p.verse               || "";
+    if (refInput)                  refInput.value                  = p.reference           || "";
+    if (wordsInput)                wordsInput.value                = (p.words || []).join(", ");
+    if (sizeInput)                 sizeInput.value                 = p.gridSize            || 14;
+    if (titleFontInput)            titleFontInput.value            = p.titleFont           || DEFAULT_TITLE_FONT;
+    if (puzzleFontInput)           puzzleFontInput.value           = p.puzzleFont          || DEFAULT_PUZZLE_FONT;
+    if (verseFontInput)            verseFontInput.value            = p.verseFont           || DEFAULT_VERSE_FONT;
+    if (titleFontSizeInput)        titleFontSizeInput.value        = p.titleFontSize       || 22;
+    if (verseFontSizeInput)        verseFontSizeInput.value        = p.verseFontSize       || 18;
+    if (puzzleLetterFontSizeInput) puzzleLetterFontSizeInput.value = p.puzzleLetterFontSize || 66;
+    if (puzzleSizeMultiplierInput) puzzleSizeMultiplierInput.value = p.puzzleSizeMultiplier || 0.88;
+    if (puzzleVerseSpacingInput)   puzzleVerseSpacingInput.value   = p.puzzleVerseSpacing  || 0.75;
+    if (lineSpacingInput)          lineSpacingInput.value          = p.lineSpacing         || 0.3;
+    if (marginTopInput)            marginTopInput.value            = p.marginTop           || 0.6;
+    if (marginLeftInput)           marginLeftInput.value           = p.marginLeft          || 0.6;
+    if (marginRightInput)          marginRightInput.value          = p.marginRight         || 0.6;
+    if (marginBottomInput)         marginBottomInput.value         = p.marginBottom        || 0.6;
+    // clear preview so user knows they need to regenerate
+    previewGrid.innerHTML  = "";
+    previewTitle.textContent = "";
+    previewVerse.textContent = "";
+    previewRef.textContent   = "";
+    btnExport.disabled = true;
+    lastState = null;
+    messages.textContent = `Loaded "${p.label || "puzzle"}" -- click Generate Preview to rebuild.`;
+    messages.style.color = "var(--accent-color)";
   }
 
-  // Save Settings button
-  const btnSaveSettings = el("btnSaveSettings");
-  if (btnSaveSettings) {
-    btnSaveSettings.addEventListener("click", () => {
-      const data = buildSettingsJSON();
-      if (!data) { alert("Generate a puzzle first before saving settings."); return; }
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      const safeName = (data.title || "puzzle").replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, "_");
-      a.href     = url;
-      a.download = safeName + "_settings.json";
-      a.click();
-      URL.revokeObjectURL(url);
-      messages.textContent = "Settings saved to " + a.download;
-      messages.style.color = "green";
-      setTimeout(() => { messages.textContent = ""; }, 4000);
-    });
+  function renderBookUI() {
+    const hasBook = !!book;
+    const hasPuzzles = hasBook && book.puzzles.length > 0;
+
+    // Header
+    bookNoProject.classList.toggle("hidden", hasBook);
+    bookMeta.classList.toggle("hidden", !hasBook);
+    if (hasBook) {
+      bookMetaTitle.textContent  = book.bookTitle || "Untitled Book";
+      bookMetaAuthor.textContent = book.author ? `by ${book.author}` : "";
+      bookPuzzleCount.textContent = `${book.puzzles.length} puzzle${book.puzzles.length === 1 ? "" : "s"}`;
+    }
+
+    // Book-level buttons
+    btnSaveBook.disabled  = !hasBook;
+    btnCloseBook.disabled = !hasBook;
+
+    // Puzzle list
+    puzzleListEl.classList.toggle("hidden", !hasBook);
+    // Rebuild list items
+    // Remove all items except the empty placeholder
+    Array.from(puzzleListEl.querySelectorAll(".puzzle-list-item")).forEach(n => n.remove());
+
+    if (hasBook) {
+      puzzleListEmpty.style.display = hasPuzzles ? "none" : "block";
+      book.puzzles.forEach((p, i) => {
+        const li = document.createElement("li");
+        li.className = "puzzle-list-item" + (i === activePuzzleIndex ? " active" : "");
+        li.dataset.index = i;
+
+        const numSpan = document.createElement("span");
+        numSpan.className = "pli-num";
+        numSpan.textContent = `#${i + 1}`;
+
+        const labelInput = document.createElement("input");
+        labelInput.type      = "text";
+        labelInput.className = "pli-label";
+        labelInput.value     = p.label || `Puzzle ${i + 1}`;
+        labelInput.title     = "Click to rename";
+        labelInput.addEventListener("click", e => e.stopPropagation());
+        labelInput.addEventListener("change", e => {
+          book.puzzles[i].label = e.target.value.trim() || `Puzzle ${i + 1}`;
+          // update count label doesn't need re-render, just the count span if we want
+        });
+
+        const refSpan = document.createElement("span");
+        refSpan.className   = "pli-ref";
+        refSpan.textContent = p.reference || "";
+
+        const delBtn = document.createElement("button");
+        delBtn.className   = "pli-delete";
+        delBtn.textContent = "✕";
+        delBtn.title       = "Remove from book";
+        delBtn.addEventListener("click", e => {
+          e.stopPropagation();
+          if (!confirm(`Remove "${p.label || `Puzzle ${i+1}`}" from this book?`)) return;
+          book.puzzles.splice(i, 1);
+          if (activePuzzleIndex === i)        activePuzzleIndex = null;
+          else if (activePuzzleIndex > i)     activePuzzleIndex--;
+          refreshBookEditorButtons();
+          renderBookUI();
+        });
+
+        li.appendChild(numSpan);
+        li.appendChild(labelInput);
+        li.appendChild(refSpan);
+        li.appendChild(delBtn);
+
+        li.addEventListener("click", () => {
+          activePuzzleIndex = i;
+          applyPuzzle(book.puzzles[i]);
+          refreshBookEditorButtons();
+          renderBookUI();
+        });
+
+        puzzleListEl.appendChild(li);
+      });
+    }
+
+    refreshBookEditorButtons();
   }
 
-  // Load Settings button + hidden file input
-  const btnLoadSettings = el("btnLoadSettings");
-  const settingsFileInput = el("settingsFileInput");
-  if (btnLoadSettings && settingsFileInput) {
-    btnLoadSettings.addEventListener("click", () => settingsFileInput.click());
-    settingsFileInput.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        try {
-          const s = JSON.parse(ev.target.result);
-          applySettingsJSON(s);
-        } catch {
-          alert("Could not parse settings file. Make sure it is a valid JSON file saved from this app.");
-        }
-      };
-      reader.readAsText(file);
-      // Reset so same file can be reloaded if needed
-      settingsFileInput.value = "";
-    });
+  function refreshBookEditorButtons() {
+    const hasBook = !!book;
+    btnAddToBook.disabled    = !hasBook || !lastState;
+    btnUpdateInBook.disabled = !hasBook || activePuzzleIndex === null || !lastState;
   }
 
-})();
+  // ── New Book ─────────────────────────────────────────────────
+  btnNewBook.addEventListener("click", () => {
+    if (book) {
+      if (!confirm("Close the current book and start a new one? Unsaved changes will be lost.")) return;
+    }
+    const bTitle  = prompt("Book title:", "Hope NOT Fear");
+    if (bTitle === null) return;
+    const bAuthor = prompt("Author name:", "");
+    if (bAuthor === null) return;
+    book = { version: 2, bookTitle: bTitle.trim(), author: bAuthor.trim(), puzzles: [] };
+    activePuzzleIndex = null;
+    renderBookUI();
+    messages.textContent = `Book "${book.bookTitle}" created. Generate puzzles and click "Add to Book".`;
+    messages.style.color = "green";
+    setTimeout(() => { messages.textContent = ""; }, 5000);
+  });
+
+  // ── Open Book ────────────────────────────────────────────────
+  btnOpenBook.addEventListener("click", () => {
+    if (book) {
+      if (!confirm("Close the current book and open another? Unsaved changes will be lost.")) return;
+    }
+    bookFileInput.click();
+  });
+
+  bookFileInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.puzzles || !Array.isArray(data.puzzles)) throw new Error("Not a valid book file");
+        book = data;
+        if (!book.version) book.version = 2;
+        activePuzzleIndex = null;
+        renderBookUI();
+        messages.textContent = `Opened "${book.bookTitle}" with ${book.puzzles.length} puzzle(s).`;
+        messages.style.color = "green";
+        setTimeout(() => { messages.textContent = ""; }, 5000);
+      } catch {
+        alert("Could not open file. Make sure it is a book JSON saved from this app.");
+      }
+    };
+    reader.readAsText(file);
+    bookFileInput.value = "";
+  });
+
+  // ── Save Book ────────────────────────────────────────────────
+  btnSaveBook.addEventListener("click", () => {
+    if (!book) return;
+    const blob = new Blob([JSON.stringify(book, null, 2)], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    const safe = (book.bookTitle || "book").replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, "_");
+    a.href     = url;
+    a.download = safe + ".json";
+    a.click();
+    URL.revokeObjectURL(url);
+    messages.textContent = `Book saved to ${a.download}`;
+    messages.style.color = "green";
+    setTimeout(() => { messages.textContent = ""; }, 4000);
+  });
+
+  // ── Close Book ───────────────────────────────────────────────
+  btnCloseBook.addEventListener("click", () => {
+    if (!confirm("Close this book? Any unsaved changes will be lost.")) return;
+    book = null;
+    activePuzzleIndex = null;
+    renderBookUI();
+    messages.textContent = "Book closed.";
+    messages.style.color = "var(--text-secondary)";
+    setTimeout(() => { messages.textContent = ""; }, 3000);
+  });
+
+  // ── Add to Book ──────────────────────────────────────────────
+  btnAddToBook.addEventListener("click", () => {
+    if (!book || !lastState) return;
+    const p = puzzleFromState();
+    if (!p) return;
+    book.puzzles.push(p);
+    activePuzzleIndex = book.puzzles.length - 1;
+    renderBookUI();
+    messages.textContent = `"${p.label || "Puzzle"}" added to book (#${book.puzzles.length}).`;
+    messages.style.color = "green";
+    setTimeout(() => { messages.textContent = ""; }, 4000);
+  });
+
+  // ── Update in Book ───────────────────────────────────────────
+  btnUpdateInBook.addEventListener("click", () => {
+    if (!book || activePuzzleIndex === null || !lastState) return;
+    const p = puzzleFromState();
+    if (!p) return;
+    // Preserve any manual label rename the user did in the list
+    const existingLabel = book.puzzles[activePuzzleIndex].label;
+    p.label = existingLabel || p.label;
+    book.puzzles[activePuzzleIndex] = p;
+    renderBookUI();
+    messages.textContent = `Puzzle #${activePuzzleIndex + 1} updated in book.`;
+    messages.style.color = "green";
+    setTimeout(() => { messages.textContent = ""; }, 4000);
+  });
+
+  // ── Keep Add/Update buttons fresh after Generate ─────────────
+  // Patch: after generate sets lastState, refresh book button states
+  const _origGenClick = btnGenerate.onclick;
+  // We hook via MutationObserver on btnExport.disabled instead
+  // (btnExport is toggled in the generate handler which we can't easily wrap)
+  // Simpler: poll on btnExport state change via observer
+  new MutationObserver(() => {
+    refreshBookEditorButtons();
+  }).observe(btnExport, { attributes: true, attributeFilter: ["disabled"] });
+
+  // Also refresh after clear
+  const _origClearListener = btnClear.onclick;
+  btnClear.addEventListener("click", () => {
+    activePuzzleIndex = null;
+    refreshBookEditorButtons();
+  });
+
+  // Initial render
+  renderBookUI();
+
