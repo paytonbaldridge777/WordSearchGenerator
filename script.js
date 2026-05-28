@@ -1600,26 +1600,27 @@
   // ── Helpers ──────────────────────────────────────────────────
 
   function puzzleFromState() {
-    if (!lastState) return null;
+    // Always read live field values so edits made after Generate are captured.
+    // Falls back to lastState for grid/placed data which can only come from Generate.
     return {
-      label:               lastState.title || "",
-      verse:               lastState.verse || "",
-      reference:           lastState.reference || "",
-      words:               lastState.words || [],
-      gridSize:            lastState.grid ? lastState.grid.length : parseInt(sizeInput.value, 10),
-      titleFont:           lastState.titleFont,
-      puzzleFont:          lastState.puzzleFont,
-      verseFont:           lastState.verseFont,
-      titleFontSize:       lastState.titleFontSize,
-      verseFontSize:       lastState.verseFontSize,
-      puzzleLetterFontSize: lastState.puzzleLetterFontSize,
-      puzzleSizeMultiplier: lastState.puzzleSizeMultiplier,
-      puzzleVerseSpacing:  lastState.puzzleVerseSpacing,
-      lineSpacing:         lastState.lineSpacing,
-      marginTop:           lastState.marginTop,
-      marginLeft:          lastState.marginLeft,
-      marginRight:         lastState.marginRight,
-      marginBottom:        lastState.marginBottom,
+      label:               titleInput?.value.trim()                               || lastState?.title       || "",
+      verse:               verseInput?.value.trim()                               || lastState?.verse       || "",
+      reference:           refInput?.value.trim()                                 || lastState?.reference   || "",
+      words:               parseWords(wordsInput?.value || ""),
+      gridSize:            parseInt(sizeInput?.value, 10)                         || lastState?.grid?.length || 14,
+      titleFont:           titleFontInput?.value                                  || lastState?.titleFont   || DEFAULT_TITLE_FONT,
+      puzzleFont:          puzzleFontInput?.value                                 || lastState?.puzzleFont  || DEFAULT_PUZZLE_FONT,
+      verseFont:           verseFontInput?.value                                  || lastState?.verseFont   || DEFAULT_VERSE_FONT,
+      titleFontSize:       parseFloat(titleFontSizeInput?.value)                  || lastState?.titleFontSize       || 22,
+      verseFontSize:       parseFloat(verseFontSizeInput?.value)                  || lastState?.verseFontSize       || 18,
+      puzzleLetterFontSize: parseFloat(puzzleLetterFontSizeInput?.value)          || lastState?.puzzleLetterFontSize || 66,
+      puzzleSizeMultiplier: parseFloat(puzzleSizeMultiplierInput?.value)          || lastState?.puzzleSizeMultiplier || 0.88,
+      puzzleVerseSpacing:  parseFloat(puzzleVerseSpacingInput?.value)             || lastState?.puzzleVerseSpacing   || 0.75,
+      lineSpacing:         parseFloat(lineSpacingInput?.value)                    || lastState?.lineSpacing          || 0.3,
+      marginTop:           parseFloat(marginTopInput?.value)                      || lastState?.marginTop    || 0.6,
+      marginLeft:          parseFloat(marginLeftInput?.value)                     || lastState?.marginLeft   || 0.6,
+      marginRight:         parseFloat(marginRightInput?.value)                    || lastState?.marginRight  || 0.6,
+      marginBottom:        parseFloat(marginBottomInput?.value)                   || lastState?.marginBottom || 0.6,
     };
   }
 
@@ -1752,8 +1753,11 @@
 
   function refreshBookEditorButtons() {
     const hasBook = !!book;
+    // Add to Book requires a generated grid (lastState).
     btnAddToBook.disabled    = !hasBook || !lastState;
-    btnUpdateInBook.disabled = !hasBook || activePuzzleIndex === null || !lastState;
+    // Update in Book only requires a puzzle to be loaded -- no re-generate needed.
+    // Field edits (title, verse, words, fonts, etc.) are read live from the inputs.
+    btnUpdateInBook.disabled = !hasBook || activePuzzleIndex === null;
   }
 
   // ── Puzzle list collapse toggle ──────────────────────────────
