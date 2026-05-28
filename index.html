@@ -392,6 +392,28 @@
       line-height: 1;
     }
     .pli-delete:hover { color: var(--error-text); }
+    /* Puzzle list collapsible toggle */
+    #puzzleListToggle {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 6px 2px;
+      margin-bottom: 4px;
+      user-select: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    #puzzleListToggle:hover { color: var(--text-primary); }
+    #puzzleListToggle .toggle-arrow {
+      display: inline-block;
+      transition: transform 0.2s ease;
+      font-size: 0.75em;
+    }
+    #puzzleListToggle.collapsed .toggle-arrow { transform: rotate(-90deg); }
+    #puzzleList.list-collapsed { display: none !important; }
+
     /* Editor book buttons */
     #bookEditorActions {
       display: flex;
@@ -436,6 +458,10 @@
           <button id="btnCloseBook" type="button" class="secondary" disabled>✕ Close Book</button>
         </div>
 
+        <div id="puzzleListToggle" style="display:none">
+          <span>📋 Puzzles in this book</span>
+          <span class="toggle-arrow">▼</span>
+        </div>
         <ul id="puzzleList" class="hidden">
           <li id="puzzleListEmpty">No puzzles yet. Generate a puzzle and click "Add to Book".</li>
         </ul>

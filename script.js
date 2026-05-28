@@ -1671,9 +1671,12 @@
     btnCloseBook.disabled = !hasBook;
 
     // Puzzle list
+    // Show/hide the list toggle row and list itself
+    const listToggleRow = el("puzzleListToggle");
+    if (listToggleRow) listToggleRow.style.display = hasBook ? "flex" : "none";
     puzzleListEl.classList.toggle("hidden", !hasBook);
-    // Rebuild list items
-    // Remove all items except the empty placeholder
+
+    // Rebuild list items -- remove old ones, keep empty placeholder
     Array.from(puzzleListEl.querySelectorAll(".puzzle-list-item")).forEach(n => n.remove());
 
     if (hasBook) {
@@ -1687,15 +1690,19 @@
         numSpan.className = "pli-num";
         numSpan.textContent = `#${i + 1}`;
 
-        const labelInput = document.createElement("input");
-        labelInput.type      = "text";
-        labelInput.className = "pli-label";
-        labelInput.value     = p.label || `Puzzle ${i + 1}`;
-        labelInput.title     = "Click to rename";
-        labelInput.addEventListener("click", e => e.stopPropagation());
-        labelInput.addEventListener("change", e => {
-          book.puzzles[i].label = e.target.value.trim() || `Puzzle ${i + 1}`;
-          // update count label doesn't need re-render, just the count span if we want
+        // Label: plain span (not input) to avoid stealing clicks
+        // Double-click to rename inline
+        const labelSpan = document.createElement("span");
+        labelSpan.className   = "pli-label";
+        labelSpan.textContent = p.label || `Puzzle ${i + 1}`;
+        labelSpan.title       = "Double-click to rename";
+        labelSpan.addEventListener("dblclick", e => {
+          e.stopPropagation();
+          const current = book.puzzles[i].label || `Puzzle ${i + 1}`;
+          const newLabel = prompt("Rename puzzle:", current);
+          if (newLabel === null) return;
+          book.puzzles[i].label = newLabel.trim() || current;
+          labelSpan.textContent = book.puzzles[i].label;
         });
 
         const refSpan = document.createElement("span");
@@ -1717,15 +1724,23 @@
         });
 
         li.appendChild(numSpan);
-        li.appendChild(labelInput);
+        li.appendChild(labelSpan);
         li.appendChild(refSpan);
         li.appendChild(delBtn);
 
-        li.addEventListener("click", () => {
+        // FIX: use mousedown so it fires before any focus/blur events on child elements
+        li.addEventListener("mousedown", (e) => {
+          // Ignore clicks on delete button
+          if (e.target === delBtn) return;
           activePuzzleIndex = i;
+          // Apply puzzle fields directly -- do NOT call renderBookUI here to avoid
+          // destroying the list while the click is still being processed
           applyPuzzle(book.puzzles[i]);
+          // Update active highlight manually instead
+          Array.from(puzzleListEl.querySelectorAll(".puzzle-list-item")).forEach((el, idx) => {
+            el.classList.toggle("active", idx === i);
+          });
           refreshBookEditorButtons();
-          renderBookUI();
         });
 
         puzzleListEl.appendChild(li);
@@ -1739,6 +1754,15 @@
     const hasBook = !!book;
     btnAddToBook.disabled    = !hasBook || !lastState;
     btnUpdateInBook.disabled = !hasBook || activePuzzleIndex === null || !lastState;
+  }
+
+  // ── Puzzle list collapse toggle ──────────────────────────────
+  const puzzleListToggle = el("puzzleListToggle");
+  if (puzzleListToggle) {
+    puzzleListToggle.addEventListener("click", () => {
+      puzzleListToggle.classList.toggle("collapsed");
+      puzzleListEl.classList.toggle("list-collapsed");
+    });
   }
 
   // ── New Book ─────────────────────────────────────────────────
