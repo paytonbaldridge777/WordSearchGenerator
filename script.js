@@ -820,7 +820,7 @@
   }
 
   // ------------------ Word search core ------------------
-  const sanitizeWord = (w) => w.toUpperCase().replace(/[^A-Z\u00C0-\u024F']/g, "").trim();
+  const sanitizeWord = (w) => w.toUpperCase().replace(/'/g, "").replace(/[^A-Z\u00C0-\u024F]/g, "").trim();
   const uniq  = (arr) => [...new Set(arr)];
   const byLen = (a,b) => b.length - a.length;
 
