@@ -514,7 +514,8 @@
       <input id="title" type="text" placeholder="e.g., Psalm 23 Word Search" />
 
       <label for="verse">Bible Verse</label>
-      <textarea id="verse" placeholder="Paste or type verse here..."></textarea>
+      <textarea id="verse" placeholder="Paste or type verse here..." maxlength="640"></textarea>
+      <div id="verseCharCount" style="font-size:11px;color:#888;text-align:right;margin-top:2px;">0 / 640</div>
 
       <label for="words">Target Words (subset of verse; comma or line separated)</label>
       <textarea id="words" placeholder="LORD, shepherd, mercy"></textarea>

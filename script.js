@@ -102,6 +102,18 @@
 
   const titleInput = el("title");
   const verseInput = el("verse");
+  const verseCharCount = el("verseCharCount");
+  const VERSE_MAX = 640;
+
+  function setVerseValue(text) {
+    const truncated = text.length > VERSE_MAX ? text.slice(0, VERSE_MAX) : text;
+    verseInput.value = truncated;
+    if (verseCharCount) {
+      const len = truncated.length;
+      verseCharCount.textContent = `${len} / ${VERSE_MAX}`;
+      verseCharCount.style.color = len >= VERSE_MAX ? "#c0392b" : "#888";
+    }
+  }
   const wordsInput = el("words");
   const refInput   = el("reference");
   const sizeInput = el("puzzleSize");
@@ -601,10 +613,9 @@
 
   function clearVerseUI() {
     Array.from(verseSelect.options).forEach(opt => (opt.selected = false));
-    verseInput.value = "";
+    setVerseValue("");
     refInput.value = "";
     if (btnSuggestWords) btnSuggestWords.disabled = true;
-    if (previewVerse) previewVerse.innerHTML = "";
     if (previewRef) previewRef.textContent = "";
   }
 
@@ -730,7 +741,7 @@
 
     // Set both fields: reference box and verse box (with reference prepended)
     refInput.value = refString;
-    verseInput.value = `${refString} ${translatedText}`;
+    setVerseValue(`${refString} ${translatedText}`);
 
     // Enable "Suggest Words" button when verse text is populated
     if (btnSuggestWords) {
@@ -767,7 +778,7 @@
 
     // Set both fields: reference box and verse box (with reference prepended)
     refInput.value = refString;
-    verseInput.value = `${refString} ${translatedText}`;
+    setVerseValue(`${refString} ${translatedText}`);
 
     // Update preview if it exists
     if (lastState) {
@@ -780,17 +791,18 @@
 
   // ------------------ Word Suggestion Feature ------------------
   function extractSuggestedWords(verseText) {
-    // Extract words
-    const words = verseText.match(/[a-zA-Z]+/g) || [];
+    // Extract words including apostrophes (contractions) and accented/unicode letters
+    const words = verseText.match(/[a-zA-Z\u00C0-\u024F](?:[a-zA-Z\u00C0-\u024F'])*[a-zA-Z\u00C0-\u024F]|[a-zA-Z\u00C0-\u024F]/g) || [];
     const suggestions = [];
     const seen = new Set();
     
     for (const word of words) {
       const cleanWord = word.toUpperCase();
+      const baseWord = word.toLowerCase().replace(/'/g, "");
       
       // Filter: must be 4+ letters, not common, not duplicate
       if (cleanWord.length >= 4 && 
-          !COMMON_WORDS.has(word.toLowerCase()) && 
+          !COMMON_WORDS.has(baseWord) && 
           !seen.has(cleanWord)) {
         
         suggestions.push({
@@ -808,7 +820,7 @@
   }
 
   // ------------------ Word search core ------------------
-  const sanitizeWord = (w) => w.toUpperCase().replace(/[^A-Z]/g, "").trim();
+  const sanitizeWord = (w) => w.toUpperCase().replace(/[^A-Z\u00C0-\u024F']/g, "").trim();
   const uniq  = (arr) => [...new Set(arr)];
   const byLen = (a,b) => b.length - a.length;
 
@@ -1021,7 +1033,7 @@
     const placedWordSet = new Set(placedWords || []);
     const used = new Set();
     const verseHTML = verse.split(/\b/).map(tok => {
-      const up = tok.toUpperCase().replace(/[^A-Z]/g, "");
+      const up = tok.toUpperCase().replace(/[^A-Z\u00C0-\u024F']/g, "");
       if (placedWordSet.has(up) && !used.has(up)) {
         used.add(up);
         return `<span style="font-weight:bold;text-decoration:underline">${tok}</span>`;
@@ -1315,7 +1327,7 @@
       const verseTokens = (opts.verse || "").split(/\s+/);
       const tokens = [];
       for (const raw of verseTokens) {
-        const up = raw.toUpperCase().replace(/[^A-Z]/g, "");
+        const up = raw.toUpperCase().replace(/[^A-Z\u00C0-\u024F']/g, "");
         const bold = placedWordSet.has(up) && !used.has(up);
         if (bold) used.add(up);
         tokens.push({ text: raw, bold, italic: false });
@@ -1462,6 +1474,15 @@
   // Enable "Suggest Words" button when verse text is available
   if (verseInput && btnSuggestWords) {
     verseInput.addEventListener('input', () => {
+      // Enforce 640-char limit on manual input
+      if (verseInput.value.length > VERSE_MAX) {
+        verseInput.value = verseInput.value.slice(0, VERSE_MAX);
+      }
+      if (verseCharCount) {
+        const len = verseInput.value.length;
+        verseCharCount.textContent = `${len} / ${VERSE_MAX}`;
+        verseCharCount.style.color = len >= VERSE_MAX ? "#c0392b" : "#888";
+      }
       const hasText = verseInput.value.trim().length > 0;
       btnSuggestWords.disabled = !hasText;
     });
@@ -1560,7 +1581,8 @@
   });
 
   btnClear.addEventListener("click", () => {
-    titleInput.value = verseInput.value = wordsInput.value = refInput.value = "";
+    titleInput.value = wordsInput.value = refInput.value = "";
+    setVerseValue("");
     previewGrid.innerHTML = "";
     previewTitle.textContent = "";
     previewVerse.textContent = "";
@@ -1626,7 +1648,7 @@
 
   function applyPuzzle(p) {
     if (titleInput)                titleInput.value                = p.label               || "";
-    if (verseInput)                verseInput.value                = p.verse               || "";
+    if (verseInput)                setVerseValue(p.verse               || "");
     if (refInput)                  refInput.value                  = p.reference           || "";
     if (wordsInput)                wordsInput.value                = (p.words || []).join(", ");
     if (sizeInput)                 sizeInput.value                 = p.gridSize            || 14;
