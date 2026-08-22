@@ -203,7 +203,7 @@ STRINGS = {
 
     "es": {
         "subtitle":        "U N  D E V O C I O N A L  D E  S O P A  D E  L E T R A S  BÍ B L I C A S",
-        "puzzle_count":    "100 Sopas de Letras de Fe, Esperanza y Escritura",
+        "puzzle_count":    "100 Rompecabezas de Fe, Esperanza y Escritura",
         "by":              "por",
         "copyright_title": "Derechos de Autor",
         "copyright_body":  (
@@ -223,13 +223,13 @@ STRINGS = {
         "dedication_lines": [
             "Este libro está dedicado a la memoria de mi madre, Elizabeth,",
             "cuyas manos gentiles pasaron las páginas de innumerables libros de sopas de letras",
-            "y cuyo corazón fiel nunca dejó de buscar la palabra de Dios.",
+            "y cuyo corazón fiel nunca dejó de buscar.",
             "",
             "En sus últimos años, las palabras se volvieron más difíciles de retener,",
-            "pero su amor por las Escrituras, y por el Dios jamás decayó.",
+            "pero su amor por las Escrituras, y por el Dios que las escribió, nunca decayó.",
             "",
             "Ella merecía libros dignos de su fe.",
-            "Este es para ella, y para cada alma como de ella.",
+            "Este es para ella, y para cada alma como la suya.",
             "",
             "Se fue de nuestra vista en 2023, pero nunca de nuestros corazones.",
             "",
@@ -240,17 +240,17 @@ STRINGS = {
         "howto_title":     "Cómo Usar Este Libro",
         "howto_blocks": [
             ("Bienvenido",
-             "Este devocional te acerca más a las Escrituras a traves de la sopa de letras"
-             "temática enfocada y meditativa. Cada par numerado de rompecabezas esta "
+             "Este devocional te acerca más a las Escrituras a traves de la resolucion de "
+             "rompecabezas enfocada y meditativa. Cada par numerado de rompecabezas esta "
              "construido a partir del mismo pasaje bíblico, abordado desde dos ángulos."),
-            ("Sopa de letras de Versos",
+            ("Rompecabezas de Versos",
              "Las palabras se extraen directamente de un versículo bíblico especifico. "
              "Mientras buscas, deja que cada palabra te ancle al pasaje. El versículo "
              "completo esta impreso debajo de la cuadricula, con las palabras ocultas resaltadas."),
-            ("Sopa de letras de Reflexion",
+            ("Rompecabezas de Reflexion",
              "Las palabras se extraen de una reflexión devocional sobre el mismo versiculo. "
-             "Estos sopa de letras te invitan a pensar mas profundamente sobre cómo las "
-             "Escrituras hablan a tu vida."),
+             "Estos rompecabezas te invitan a pensar mas profundamente sobre cómo las "
+             "Escrituras hablan a tu vida hoy."),
             ("Encontrar Palabras",
              "Las palabras pueden estar ocultas horizontal, vertical o diagonalmente, y "
              "pueden ir hacia adelante o hacia atras. Encierra en un círculo o resalta "
@@ -259,7 +259,7 @@ STRINGS = {
              "El numero de página de la solución esta impreso en la esquina inferior derecha "
              "de cada página de rompecabezas. Todas las soluciones están al final del libro."),
             ("Una Palabra de Aliento",
-             "No hay prisa. Tómate tu tiempo con cada sopa de letras. Ora sobre el versículo. "
+             "No hay prisa. Tómate tu tiempo con cada rompecabezas. Ora sobre el versículo. "
              "Deja que las palabras penetren. Esto no es solo un juego. Es una invitación "
              "a pasar tiempo tranquilo en la Palabra."),
         ],
@@ -270,7 +270,7 @@ STRINGS = {
         ],
         "quote_ref":       "2 Timoteo 1:7",
         "answer_key":      "Clave de Respuestas",
-        "answer_key_sub":  "Las soluciones se presentan en el mismo orden que las sopas de letras.",
+        "answer_key_sub":  "Las soluciones aparecen en el mismo orden que los rompecabezas.",
         "solution_ref":    "Solución en la página",
         "verse_label":     "Verso",
         "reflection_label":"Reflexión",
@@ -281,8 +281,8 @@ STRINGS = {
              "Este libro existe porque Él existe."),
             ("Estamos agradecidos por nuestra madre, Elizabeth, cuyo amor por las Escrituras "
              "plantó una semilla en nosotros que creció hasta convertirse en estas paginas. "
-             "Esperamos que este libro le hubiera encantado. Creemos de corazón que así habría sido."),
-            ("A todos los que han resuelto estas sopas de letras, orado sobre estos versículos "
+             "Esperamos que le hubiera encantado este libro. Creemos que así es."),
+            ("A todos los que han resuelto estos rompecabezas, orado sobre estos versículos "
              "y permanecido en la Palabra un poco mas gracias a este devocional -- gracias. "
              "Son exactamente para quienes lo hicimos."),
             ("Si este libro te bendijo, te agradeceríamos mucho que lo compartieras con "
