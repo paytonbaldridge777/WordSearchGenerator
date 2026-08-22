@@ -7,6 +7,9 @@ Install Python from python.org if it is not already installed, then in Terminal/
 3
 Run assemble_book.py
 From the folder containing the script, run: python3 assemble_book.py --folder "/path/to/your/pdf/folder" --output book_interior.pdf --title "Your Title" --author "Your Name" --theme "Your Theme" --language="en"
+Title example: Anchored in the Word
+Theme: Divine Joy
+**Be sure to update to correct language en or es and update title and theme in spanish or english
 
 (add --solutions-per-page 4 or 6 to change the answer key layout, or --skip-front-matter to test puzzles only). This produces a single print-ready book_interior.pdf with front matter, all puzzles in Verse/Reflection order with solution-page references, an Answer Key divider, and tiled solution pages.
 4
