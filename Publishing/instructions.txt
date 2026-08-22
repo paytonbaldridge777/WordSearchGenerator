@@ -1,0 +1,24 @@
+1
+Name and organize all puzzle/solution PDFs
+Put every puzzle and solution PDF in one flat folder. Filenames must follow the pattern the script parses: something like 'BookTitle_-_Verse_1_Puzzle.pdf', 'BookTitle_-_Verse_1_Solution.pdf', 'BookTitle_-_Reflection_1_Puzzle.pdf', 'BookTitle_-_Reflection_1_Solution.pdf', and so on. Trailing '(1)', '(2)' style suffixes from duplicate downloads are fine and get stripped automatically.
+2
+One-time Python setup
+Install Python from python.org if it is not already installed, then in Terminal/Command Prompt run: pip install pypdf reportlab. This only needs to be done once per computer.
+3
+Run assemble_book.py
+From the folder containing the script, run: python3 assemble_book.py --folder "/path/to/your/pdf/folder" --output book_interior.pdf --title "Your Title" --author "Your Name" (add --solutions-per-page 4 or 6 to change the answer key layout, or --skip-front-matter to test puzzles only). This produces a single print-ready book_interior.pdf with front matter, all puzzles in Verse/Reflection order with solution-page references, an Answer Key divider, and tiled solution pages.
+4
+Review the assembled PDF
+Open book_interior.pdf and check the front matter text, puzzle order, page numbers, and that each puzzle's 'Solution on page X' reference points to the correct spot. Confirm 4 vs 6 solutions per page reads clearly at your chosen trim size.
+5
+Calculate spine width from final page count
+Once the page count is final, compute spine width using KDP's white paper coefficient: total pages x 0.002252 inches. This number is required to lay out the cover correctly.
+6
+Build the full cover file
+Create one combined front + spine + back cover PDF/JPG at KDP's exact trim dimensions for your page count and trim size (e.g. 8.5x11 with the calculated spine adds up to a specific total width x 11.25" height at 300 DPI). Keep all text at least 0.25" inside the trim edges (KDP's safe zone) to avoid automated contrast/text-detection false flags.
+7
+Upload interior and cover to KDP
+In KDP, upload book_interior.pdf as the manuscript/interior and the full cover file separately in the cover uploader. Set trim size (8.5x11), B&W interior, no bleed, matte finish, categories, keywords, and pricing (>=$9.99 to hit the 60% royalty tier if using expanded distribution).
+8
+Order and check a proof copy
+Before hitting publish, order a physical proof (or use KDP's online previewer thoroughly) to confirm print quality, margins, and that puzzle grids stay crisp on your chosen paper stock.
