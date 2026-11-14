@@ -1339,15 +1339,19 @@
       function flushLine() {
         if (!line.length) return;
         let cursorX = m.left;
-        for (const seg of line) {
+        for (let i = 0; i < line.length; i++) {
+          const seg = line[i];
+          // Preserve actual separator characters in the PDF text stream.
+          // Position-only gaps can disappear when text is extracted from a PDF.
+          const renderedText = seg.text + (i < line.length - 1 ? " " : "");
           doc.setFont(verseFont, seg.bold ? "bold" : "normal");
           doc.setFontSize(verseFontSize);
-          doc.text(seg.text, cursorX, y, { baseline: "alphabetic" });
+          doc.text(renderedText, cursorX, y, { baseline: "alphabetic" });
           if (seg.bold) {
             doc.setLineWidth(0.015);
             doc.line(cursorX, y + 0.03, cursorX + doc.getTextWidth(seg.text), y + 0.03);
           }
-          cursorX += doc.getTextWidth(seg.text + " ");
+          cursorX += doc.getTextWidth(renderedText);
         }
         y += (opts.lineSpacing || 0.3) * 4; line = []; lineW = 0;
       }
