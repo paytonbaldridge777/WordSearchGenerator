@@ -1339,15 +1339,22 @@
       function flushLine() {
         if (!line.length) return;
         let cursorX = m.left;
-        for (const seg of line) {
+        for (let i = 0; i < line.length; i++) {
+          const seg = line[i];
           doc.setFont(verseFont, seg.bold ? "bold" : "normal");
           doc.setFontSize(verseFontSize);
-          doc.text(seg.text, cursorX, y, { baseline: "alphabetic" });
+          // Write spaces into PDF content, not just cursor positioning.
+          // Leading spaces keep the separator attached to the next word
+          // so text extraction can distinguish e.g. "Yahweh. David".
+          const prefix = i === 0 ? "" : " ";
+          const renderedText = prefix + seg.text;
+          doc.text(renderedText, cursorX, y, { baseline: "alphabetic" });
+          const wordX = cursorX + doc.getTextWidth(prefix);
           if (seg.bold) {
             doc.setLineWidth(0.015);
-            doc.line(cursorX, y + 0.03, cursorX + doc.getTextWidth(seg.text), y + 0.03);
+            doc.line(wordX, y + 0.03, wordX + doc.getTextWidth(seg.text), y + 0.03);
           }
-          cursorX += doc.getTextWidth(seg.text + " ");
+          cursorX += doc.getTextWidth(renderedText);
         }
         y += (opts.lineSpacing || 0.3) * 4; line = []; lineW = 0;
       }
