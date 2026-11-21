@@ -31,3 +31,8 @@ These findings use the prior correction manifest and must be confirmed against t
 6. Update the full generator source and add regression tests so fixes persist.
 
 **Status:** editorial work in progress; no final KDP interior approved.
+
+## Layout regression discovered 2026-11-21
+- The temporary PDF Scripture patch used a white redaction region starting at PDF y=442 while puzzle grid borders end at y≈445.72; this concealed the bottom horizontal rule and last ≈4 points of the side borders on 15 corrected puzzle pages (including Verse 5).
+- An intermediate proof v3 repairs precisely these 15 borders without altering puzzle letters. Rendered Verse 5 was visually checked, and the horizontal border was detected on all 50 Verse puzzle pages.
+- **Permanent fix required:** preserve original grid drawing objects; text editing/redaction must never overlap puzzle geometry. Add automated image-based regression for all 100 puzzle/answer-key pages, margins, heading, footer, and text overflow. The v3 proof remains NON-KDP-READY.
