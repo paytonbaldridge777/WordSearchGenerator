@@ -49,3 +49,10 @@ User approved **layout adjustments before any font-size reduction**. Treat the b
 Automated PDF visual/geometry check: 50/50 Verse puzzle pages passed for left/right/bottom border detection, grid bounding box equivalence, page dimensions, and passage position/overflow limits. **15 Verse pages showed a reduced font size** relative to the original 16.88-pt body font: Verse 2 (16), 5 (15.5), 8 (14.5), 10 (16), 12 (16), 14 (16), 16 (16), 22 (16), 24 (16), 26 (16), 29 (16), 41 (14.5), 46 (15), 49 (16), 50 (16). Reassess each reduction in the next layout-first rebuild.
 
 This is a narrow geometry validation, **not a full layout or KDP validation**.
+
+## Selection compatibility audit (continued 2026-11-21)
+- Checked original bold selections from the manifest against the corrected verse *body*, ignoring Scripture citation words (a first pass falsely flagged CHRONICLES in the reference, corrected in the follow-up).
+- **10 unique words in six puzzles** are no longer in the quoted passage: Verse 5 IMMOVABLE; Verse 10 CHIEF/FLUTES/MUSICIAN; Verse 29 SOLOMON/SONG; Verse 41 LIE; Verse 49 SEEN/UNTO; Verse 50 UNTO.
+- Searched those passage words in the original 12×12 printed letter grids, in eight directions. Only Verse 49 has an immediately reusable different word found in the grid, COME (one path); this does not certify that its highlighting is correct. Most replacements will require regenerating the affected puzzle/solution grid.
+- **No edits to grid letters or answer-key shading were made**. Source Scripture and the 23 older-edition variants remain to be completely verified before final publication.
+- Locally generated reproducible review CSV files and selection/replacement scripts are outside GitHub until independently checked and integrated.
