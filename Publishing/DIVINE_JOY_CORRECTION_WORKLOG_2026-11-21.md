@@ -36,3 +36,16 @@ These findings use the prior correction manifest and must be confirmed against t
 - The temporary PDF Scripture patch used a white redaction region starting at PDF y=442 while puzzle grid borders end at y≈445.72; this concealed the bottom horizontal rule and last ≈4 points of the side borders on 15 corrected puzzle pages (including Verse 5).
 - An intermediate proof v3 repairs precisely these 15 borders without altering puzzle letters. Rendered Verse 5 was visually checked, and the horizontal border was detected on all 50 Verse puzzle pages.
 - **Permanent fix required:** preserve original grid drawing objects; text editing/redaction must never overlap puzzle geometry. Add automated image-based regression for all 100 puzzle/answer-key pages, margins, heading, footer, and text overflow. The v3 proof remains NON-KDP-READY.
+
+## Approved typography and layout policy (2026-11-21)
+User approved **layout adjustments before any font-size reduction**. Treat the baseline Scripture font (~16.88 pt in the latest original Divine Joy PDF) as the target:
+1. Maintain original 12×12 grid placement, full four-sided border, headers, page numbers, solution references, margins and readable underlines.
+2. Fit verified WEB Classic text by optimizing verse text wrapping, inter-paragraph spacing and usable whitespace *only within the safe text zone*; do not overwrite or cover grid geometry.
+3. If those adjustments cannot fit a longer WEB Classic passage, decrease Scripture font only as a last resort, by the smallest amount possible; maintain comfortable legibility and consistent line spacing. Verse 5 is a legitimate candidate.
+4. Record effective Scripture font size and justification per revised page; visually inspect any reduced-size page. Do not alter puzzle dimensions to make text fit.
+5. Run the border and geometry regression suite on **every Verse page**, then check Reflection pages and answer keys separately. Geometry passes do not certify Scripture accuracy, selections, print readiness or all visual issues.
+
+### Baseline comparison for intermediate v3 proof
+Automated PDF visual/geometry check: 50/50 Verse puzzle pages passed for left/right/bottom border detection, grid bounding box equivalence, page dimensions, and passage position/overflow limits. **15 Verse pages showed a reduced font size** relative to the original 16.88-pt body font: Verse 2 (16), 5 (15.5), 8 (14.5), 10 (16), 12 (16), 14 (16), 16 (16), 22 (16), 24 (16), 26 (16), 29 (16), 41 (14.5), 46 (15), 49 (16), 50 (16). Reassess each reduction in the next layout-first rebuild.
+
+This is a narrow geometry validation, **not a full layout or KDP validation**.
