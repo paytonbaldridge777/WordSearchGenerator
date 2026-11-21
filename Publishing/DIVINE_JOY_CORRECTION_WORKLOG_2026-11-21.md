@@ -56,3 +56,10 @@ This is a narrow geometry validation, **not a full layout or KDP validation**.
 - Searched those passage words in the original 12×12 printed letter grids, in eight directions. Only Verse 49 has an immediately reusable different word found in the grid, COME (one path); this does not certify that its highlighting is correct. Most replacements will require regenerating the affected puzzle/solution grid.
 - **No edits to grid letters or answer-key shading were made**. Source Scripture and the 23 older-edition variants remain to be completely verified before final publication.
 - Locally generated reproducible review CSV files and selection/replacement scripts are outside GitHub until independently checked and integrated.
+
+## Six-puzzle reconstruction proof (continued)
+- Created independent 12-page editorial PDF proof: Verse puzzles 5, 10, 29, 41, 49, 50 with six corresponding solution pages (12×12 grids).
+- Replacements under review: 5 IMM​OVABLE→JUDGE; 10 CHIEF→TRUST, MUSICIAN→BED, FLUTES→STILL; 29 SOLOMON→SINGING, SONG→DREAM; 41 LIE→SPRINGS; 49 SEEN→SEE, UNTO→PROPHETS; 50 UNTO→GENTLENESS.
+- New proof generated at 8.5×11 inches with Scripture typography at 16 pt using an *independent preview layout*. Regenerated solution strokes map to the new grid coordinates. Automated validation reported zero errors in word coordinate tracing, grid dimensions, and basic text boundary checks.
+- **Not a final interior:** currently generated proof uses a standalone preview layout, not the published pagination, and its passage text still requires comparison to the WEB Classic source. No changes were made to the old 125-page PDF, source JSON or production puzzle-grid data.
+- Artifacts generated in chat environment: `Divine_Joy_six_regenerated_puzzles_PROOF.pdf`, `Divine_Joy_six_puzzle_validation.json`, `rebuild_divine_joy_six.py`, `validate_six_rebuild.py`, and `Divine_Joy_six_rebuild_QA.md`.
