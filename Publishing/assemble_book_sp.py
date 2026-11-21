@@ -117,10 +117,10 @@ STRINGS = {
             "and certain other noncommercial uses permitted by copyright law."
         ),
         "copyright_scripture": (
-            "Scripture quotations are taken from the World English Bible (WEB), "
-            "which is in the public domain. Spanish translation by the authors."
+            "Scripture quotations are taken from the World English Bible Classic (WEB), "
+            "which is in the public domain."
         ),
-        "printed":         "Printed in the United States of América.",
+        "printed":         "Printed in the United States of America.",
         "first_edition":   "First Edition, 2026",
         "dedication_title":"Dedication",
         "dedication_lines": [
