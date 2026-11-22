@@ -71,3 +71,13 @@ This is a narrow geometry validation, **not a full layout or KDP validation**.
 - Rechecked all **89 selections** across six new 12×12 grids (previous worklog incorrectly implied 84); every selected word matches the corrected verse body, its saved coordinates produce the exact letters, each placement has a straight eight-way path, and all obsolete words are excluded. Validator reported zero **source placement** failures.
 - All 12 proof pages are 612×792 points, and all six puzzle pages retain a 12×12 border. The isolated preview still differs from the published interior, so do **not** insert the proof pages into the 125-page KDP interior without matched page templates and 6-per-page answer-key pagination.
 - Pending: rigorous authoritative punctuation/verse coverage comparison for every Verse page, all answer-key highlight audits, integration into generator and current original book style, and full visual/KDP preflight. No new final interior, Bible JSON modifications, or main-branch changes claimed.
+
+## 125-page integrated editorial proof (continued)
+- Built `Divine_Joy_125page_integrated_six_puzzles_EDITORIAL_PROOF.pdf` (125 pages; 612×792 pt) from the most recent v3 full-book layout proof and six-puzzle proof v2.
+- Replaced the body content on Verse 5/10/29/41/49/50 puzzle pages while keeping the existing printed page numbering and answer-key references.
+- Redrew only the corresponding six **left-hand** Verse answer-key tiles, preserving the right-hand Reflection tiles and six-solutions-per-page organization.
+- Corrected initial Verse 5 answer-key double-border artifact and visually inspected regenerated Verse 5, Verse 29, Verse 41, and compact key layout.
+- Verse 41's long Isaiah passage required a 15 pt font reflow to fit within the original text footprint; puzzle geometry preserved.
+- Caution: This editorial proof uses visual white covering plus overlaid content. **Hidden older PDF text can still be extracted**; it is not suitable for final release. A future source-native rebuild must eliminate all obsolete underlying text. Numeric text-layer checks may report old hidden content as footer overflow.
+- Source-selected words total 89 across all six regenerated puzzles; new solutions are based on those source coordinates. **Do not claim full page or KDP validation.**
+- Remaining release work: authoritative WEB Classic re-audit and rights wording in actual generated PDF, remove old hidden text layers with native-page generation, inspect all selected-word underlines and solution highlights, verify all 100 page layouts, and commit source changes in a reproducible pipeline.
