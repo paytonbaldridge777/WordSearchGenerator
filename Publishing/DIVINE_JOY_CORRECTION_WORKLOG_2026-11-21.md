@@ -105,3 +105,13 @@ This is a narrow geometry validation, **not a full layout or KDP validation**.
 - A more aggressive PDF redaction setting removed all 35 flagged words but also erased/damaged artwork outside the target tiles (pixel diff 269,251 changed pixels outside masks across the 13 edited key pages). **Rejected this aggressive output**; it must not be used as a basis for subsequent builds.
 - Retained editorial-only output: `Divine_Joy_125page_highlight_corrected_EDITORIAL.pdf`. Reproducible helper scripts: `divine_joy_highlight_path_review.py` and `rebuild_divine_joy_extra_highlights.py`. Detailed reports: `Divine_Joy_highlight_path_review_2026-11-22.json`, `Divine_Joy_highlight_path_postfix_2026-11-22.json`, `Divine_Joy_highlight_corrections_QA_2026-11-22.json`.
 - This exercise validates a critical architectural need: avoid editing existing dense vector PDF tile contents; reconstruct each answer-key **whole page from source** with all six tiles and independently verify selections/positions. The original/current WEB Classic textual proof and generator still require full end-to-end validation.
+
+## Revised editorial priorities (2026-11-22)
+User approved tolerating **one incidental extra highlighted word per puzzle**, provided all intended words remain correctly marked and the grid and text are accurate. Do not spend additional time deleting benign single-word extras at the expense of Scripture correctness or layout. Recheck any key with multiple intrusive highlights and all missing intended highlights.
+
+### Scripture text extraction review (2026-11-22)
+- Examined every one of 50 Verse-page text layers in the latest `Divine_Joy_125page_highlight_corrected_EDITORIAL.pdf`, using an independent non-destructive spacing screen.
+- 86 candidate joins were found across **28 Verse pages**. Examples from extracted Scripture: Verse 3 `Yahweh.Call`; Verse 16 `Yahweh,my` and `Youhave`; Verse 24 `Youwho`; Verse 28 `Yahweh!Yahweh` and `Yahweh.Yahwehis`. Detection is **not a verified count of print defects**: PDF extraction may merge spans, and false positives are possible.
+- Generated `Divine_Joy_Scripture_Spacing_Audit_2026-11-22.csv`, `.json`, and the reproducible `audit_divine_joy_scripture_spacing.py` in the conversation workspace. These have not yet been committed or incorporated into the generator.
+- This makes Scripture text normalization and final publisher matching the highest-priority outstanding work. Do not patch dozens of pages with white rectangles; instead rebuild Scripture passages natively after preserving their selected words and layouts.
+- **No new KDP-ready PDF is claimed by this review.** Use the cautious editorial proof rather than the aggressive-redaction version, which was rejected due to unintended artwork damage.
