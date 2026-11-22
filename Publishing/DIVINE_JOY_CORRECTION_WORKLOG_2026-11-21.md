@@ -115,3 +115,12 @@ User approved tolerating **one incidental extra highlighted word per puzzle**, p
 - Generated `Divine_Joy_Scripture_Spacing_Audit_2026-11-22.csv`, `.json`, and the reproducible `audit_divine_joy_scripture_spacing.py` in the conversation workspace. These have not yet been committed or incorporated into the generator.
 - This makes Scripture text normalization and final publisher matching the highest-priority outstanding work. Do not patch dozens of pages with white rectangles; instead rebuild Scripture passages natively after preserving their selected words and layouts.
 - **No new KDP-ready PDF is claimed by this review.** Use the cautious editorial proof rather than the aggressive-redaction version, which was rejected due to unintended artwork damage.
+
+## Canonical source inventory extracted (2026-11-22)
+Following user instruction to stop repeated piecemeal PDF patching, froze `Divine_Joy_125page_highlight_corrected_EDITORIAL.pdf` as **reference input**. Its SHA-256 is `fe678b84098a11507fddbd559c09af8cfe1504212de96653a453d4dbe471699f`.
+- Produced `Divine_Joy_CANONICAL_SOURCE_INVENTORY_2026-11-22.json` and reproducible `build_divine_joy_canonical_inventory.py` in the conversation workspace (NOT committed to GitHub).
+- Deterministically extracted 100/100 original 12×12 puzzle grids (14,400 letters total), 100 displayed passages/reflections and 100 solution-page footer references from the frozen 125-page editorial PDF.
+- Cross-checked the six already regenerated grids against `Divine_Joy_six_rebuilt_source_v2.json`; **6/6 grid matches**, with saved selected words and solution-coordinate paths attached to those six source records.
+- This is a **staging inventory only**, not authoritative Scripture. The remaining 94 puzzle selected word lists and placement paths are not recovered in this inventory.
+- Confirmed official publisher WEB Classic 2020 stable edition is `https://ebible.org/bible/details.php?id=eng-web`. The official `eng-web_usfm.zip` could not be retrieved inside the current container due network restrictions. Therefore **0/50 passages have undergone a new complete word-for-word publisher comparison in this pass**. This is a clear release blocker, not a pass.
+- Do not regenerate all grids or modify the book from this partial source yet. The next coherent production work is to obtain/verify publisher USFM, recover 94 saved selected-word/path sets, and then perform **one source-native full build + one final acceptance audit**.
