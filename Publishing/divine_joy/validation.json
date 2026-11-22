@@ -1,0 +1,51 @@
+{
+  "pdf_sha256": "530c211d9892bd667645df8ec2ea199491c0b845d0537b4020932f509a661bae",
+  "counts": {
+    "publisher archive digests": 1,
+    "numbered verse matches VPL": 258,
+    "numbered verse matches USFM": 258,
+    "original file digest": 1,
+    "125 single pages, unencrypted": 1,
+    "100 source puzzles": 1,
+    "letter page geometry": 125,
+    "no annotations, links, images or reused PDF forms": 125,
+    "complete render": 125,
+    "text fits print margins; fonts at least 7 pt": 125,
+    "artwork fits print margins": 125,
+    "stroke width at least 0.75 pt": 125,
+    "embedded Unicode fonts": 125,
+    "text has no invalid glyphs": 125,
+    "printed page number": 121,
+    "copyright credits WEB Classic": 1,
+    "front quotation matches publisher": 2,
+    "paired puzzle order and pagination": 100,
+    "puzzle and key titles and captions": 100,
+    "Scripture and solution footer": 100,
+    "recovered search word count matches original audit": 100,
+    "complete publisher passage": 50,
+    "rendered body exact, at original 16.88 pt": 100,
+    "body clear of grid and footer": 100,
+    "exact bold search words": 100,
+    "one underline per marked word": 100,
+    "puzzle, key and source grids match 144 letters": 100,
+    "complete grid border": 200,
+    "valid source placement": 1487,
+    "selection and path sets agree": 100,
+    "highlight endpoints centered in cells": 1487,
+    "all mandatory solution highlights rendered once": 100,
+    "no unreviewed extra highlights": 100,
+    "reflection citation agrees with paired Scripture": 50
+  },
+  "failures": [],
+  "reflows": [
+    "verse-05",
+    "verse-08",
+    "verse-41",
+    "verse-46"
+  ],
+  "original_grids": {
+    "retained_from_original": 87,
+    "edited_or_replaced": 13
+  },
+  "extra_highlights": []
+}

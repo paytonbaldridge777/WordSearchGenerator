@@ -66,6 +66,13 @@ def _find_fonts():
     else:
         candidates = [
             {
+                face: f"/usr/share/fonts/truetype/liberation2/LiberationSans-{suffix}.ttf"
+                for face, suffix in (
+                    ("normal", "Regular"), ("bold", "Bold"),
+                    ("italic", "Italic"), ("bolditalic", "BoldItalic"),
+                )
+            },
+            {
                 "normal":     "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
                 "bold":       "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
                 "italic":     "/usr/share/fonts/truetype/liberation/LiberationSans-Italic.ttf",
@@ -804,10 +811,10 @@ def assemble_solutions(solution_files_ordered, per_page=6):
 # Front matter
 # ---------------------------------------------------------------------------
 
-def build_front_matter(title, theme, author, total_puzzles, lang="en"):
-    S = STRINGS[lang]
+def build_front_matter(title, theme, author, total_puzzles, lang="en", *, strings=None, quote_page_number=None):
+    S = strings if strings is not None else STRINGS[lang]
     buf = io.BytesIO()
-    c = rl_canvas.Canvas(buf, pagesize=(PAGE_W, PAGE_H))
+    c = rl_canvas.Canvas(buf, pagesize=(PAGE_W, PAGE_H), initialFontName="MySans", invariant=True)
 
     MW = 440
     MX = (PAGE_W - MW) / 2
@@ -843,7 +850,7 @@ def build_front_matter(title, theme, author, total_puzzles, lang="en"):
 
     draw_cross(c, PAGE_W/2, PAGE_H/2+10, size=44, gray=0.76)
     c.setStrokeGray(0.70)
-    c.setLineWidth(0.7)
+    c.setLineWidth(0.75)
     c.ellipse(PAGE_W/2-48, PAGE_H/2-42, PAGE_W/2+48, PAGE_H/2+60, stroke=1, fill=0)
 
     draw_decorative_rule(c, 80, 178, PAGE_W-160, gray=0.55)
@@ -944,6 +951,8 @@ def build_front_matter(title, theme, author, total_puzzles, lang="en"):
 
     draw_decorative_rule(c, 120, PAGE_H/2-102, PAGE_W-240, gray=0.62)
     draw_decorative_rule(c, 80, PAGE_H/2-148, PAGE_W-160, gray=0.55)
+    if quote_page_number is not None:
+        draw_printed_page_number(c, quote_page_number, lang)
     c.showPage()
 
     c.save()
@@ -955,10 +964,16 @@ def build_front_matter(title, theme, author, total_puzzles, lang="en"):
 # Answer Key header page
 # ---------------------------------------------------------------------------
 
-def build_solutions_header(lang="en"):
+def draw_printed_page_number(c, number, lang="en", *, baseline=58):
+    c.setFont("MySans", 14)
+    c.setFillGray(0.20)
+    c.drawCentredString(PAGE_W / 2, baseline, STRINGS[lang]["page_num_fmt"].format(n=number))
+
+
+def build_solutions_header(lang="en", *, page_number=None):
     S = STRINGS[lang]
     buf = io.BytesIO()
-    c = rl_canvas.Canvas(buf, pagesize=(PAGE_W, PAGE_H))
+    c = rl_canvas.Canvas(buf, pagesize=(PAGE_W, PAGE_H), initialFontName="MySans", invariant=True)
     draw_decorative_rule(c, 80, PAGE_H/2+62, PAGE_W-160, gray=0.56)
     c.setFont("MySans-Bold", 36)
     c.setFillGray(0.12)
@@ -969,6 +984,8 @@ def build_solutions_header(lang="en"):
     draw_decorative_rule(c, 80, PAGE_H/2-32, PAGE_W-160, gray=0.56)
     draw_cross(c, PAGE_W/2-62, PAGE_H-450, size=14, gray=0.70)
     draw_cross(c, PAGE_W/2+62, PAGE_H-450, size=14, gray=0.70)
+    if page_number is not None:
+        draw_printed_page_number(c, page_number, lang)
     c.showPage()
     c.save()
     buf.seek(0)
@@ -979,10 +996,10 @@ def build_solutions_header(lang="en"):
 # Closing pages
 # ---------------------------------------------------------------------------
 
-def build_closing_pages(author, lang="en"):
+def build_closing_pages(author, lang="en", *, first_page_number=None):
     S = STRINGS[lang]
     buf = io.BytesIO()
-    c = rl_canvas.Canvas(buf, pagesize=(PAGE_W, PAGE_H))
+    c = rl_canvas.Canvas(buf, pagesize=(PAGE_W, PAGE_H), initialFontName="MySans", invariant=True)
 
     MW = 440
     MX = (PAGE_W - MW) / 2
@@ -1024,6 +1041,8 @@ def build_closing_pages(author, lang="en"):
 
     draw_decorative_rule(c, 80, 90, PAGE_W-160, gray=0.55)
     draw_ichthys(c, PAGE_W/2, 58, width=55, height=24, gray=0.64)
+    if first_page_number is not None:
+        draw_printed_page_number(c, first_page_number, lang, baseline=34)
     c.showPage()
 
     # ---- NOTES PAGE ----------------------------------------------------
@@ -1038,13 +1057,15 @@ def build_closing_pages(author, lang="en"):
     LINE_END_Y = 72
     LINE_GAP = 26
     c.setStrokeGray(LINE_GRAY)
-    c.setLineWidth(0.5)
+    c.setLineWidth(0.75)
     y = LINE_START_Y
     while y >= LINE_END_Y:
         c.line(MX, y, PAGE_W - MX, y)
         y -= LINE_GAP
 
     draw_decorative_rule(c, 80, 52, PAGE_W-160, gray=0.55)
+    if first_page_number is not None:
+        draw_printed_page_number(c, first_page_number + 1, lang)
     c.showPage()
 
     c.save()
